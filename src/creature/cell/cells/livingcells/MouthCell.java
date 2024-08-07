@@ -13,9 +13,9 @@ public class MouthCell extends LivingCell {
     }
 
     @Override
-    public void tick(Cell[] nearby) {
-        for (Cell cell: nearby)
-            if (cell instanceof FoodCell foodCell)
+    public void tick(Cell[][] mat) {
+        for (Cell cell: getBorderingCells(mat))
+            if (cell instanceof FoodCell foodCell && cell.getOwner() != getOwner())
                 getOwner().eat(foodCell);
     }
 }

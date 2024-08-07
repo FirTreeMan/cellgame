@@ -2,7 +2,6 @@ package creature.cell.cells.livingcells;
 
 import creature.Creature;
 import creature.cell.Cell;
-import creature.cell.FoodCell;
 import creature.cell.LivingCell;
 
 import java.awt.*;
@@ -13,9 +12,9 @@ public class DamagerCell extends LivingCell {
     }
 
     @Override
-    public void tick(Cell[] nearby) {
-        for (Cell cell: nearby)
-            if (cell instanceof LivingCell livingCell && !(livingCell instanceof DamagerCell))
+    public void tick(Cell[][] mat) {
+        for (Cell cell: getBorderingCells(mat))
+            if (cell instanceof LivingCell livingCell && cell.getOwner() != getOwner() && !(livingCell instanceof DamagerCell))
                 getOwner().hurt(livingCell.getOwner());
     }
 }

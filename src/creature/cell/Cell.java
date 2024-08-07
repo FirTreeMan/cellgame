@@ -20,4 +20,8 @@ public abstract class Cell {
     public Color getColor() {
         return color;
     }
+
+    public void tick() {
+        
+    }
 }

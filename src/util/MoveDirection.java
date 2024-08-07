@@ -7,7 +7,8 @@ public enum MoveDirection {
     LEFT,
     RIGHT,
     CLOCKWISE,
-    COUNTERCLOCKWISE;
+    COUNTERCLOCKWISE,
+    REPRODUCE;
 
     public boolean isRotation() {
         return this == CLOCKWISE || this == COUNTERCLOCKWISE;

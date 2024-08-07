@@ -18,11 +18,7 @@ public class ChloroplastCell extends LivingCell {
     }
 
     @Override
-    public void tick(Cell[] nearby) {
-        for (Cell cell: nearby)
-            if (cell instanceof FoodCell foodCell)
-                getOwner().eat(foodCell);
-
+    public void tick(Cell[][] mat) {
         ticksToProduce++;
         if (ticksToProduce >= PRODUCTION_TICKS) {
             ticksToProduce = 0;

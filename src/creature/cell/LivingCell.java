@@ -12,12 +12,17 @@ public abstract class LivingCell extends Cell {
     private final int relativeRow;
     private final int relativeCol;
 
+    private int row;
+    private int col;
+    private boolean alive;
+
     public LivingCell(Creature owner, Color color, int tickCost, int moveCost, int relativeRow, int relativeCol) {
         super(owner, color);
         this.tickCost = tickCost;
         this.moveCost = moveCost;
         this.relativeRow = relativeRow;
         this.relativeCol = relativeCol;
+        this.alive = true;
     }
 
     public int getTickCost() {
@@ -28,12 +33,20 @@ public abstract class LivingCell extends Cell {
         return moveCost;
     }
 
-    public int getRelativeRow() {
+    public int getRelativeX() {
         return relativeRow;
     }
 
-    public int getRelativeCol() {
+    public int getRelativeY() {
         return relativeCol;
+    }
+
+    public int getX() {
+        return row;
+    }
+
+    public int getY() {
+        return col;
     }
 
     public int getCost(boolean isMoving) {
@@ -42,7 +55,29 @@ public abstract class LivingCell extends Cell {
         return tickCost;
     }
 
+    public void setX(int row) {
+        this.row = row;
+    }
+
+    public void setY(int col) {
+        this.col = col;
+    }
+
+    public Cell[] getBorderingCells(Cell[][] mat) {
+        Cell[] nearby = new Cell[4];
+        if (getX() > 0)
+            nearby[0] = mat[getX() - 1][getY()];
+        if (getX() < mat.length - 1)
+            nearby[1] = mat[getX() + 1][getY()];
+        if (getY() > 0)
+            nearby[2] = mat[getX()][getY() - 1];
+        if (getY() < mat[0].length)
+            nearby[3] = mat[getX()][getY() + 1];
+
+        return nearby;
+    }
+
     public void onMove(MoveDirection moveDirection) {}
 
-    public void tick(Cell[] nearby) {}
+    public void tick(Cell[][] mat) {}
 }

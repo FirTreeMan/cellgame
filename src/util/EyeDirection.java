@@ -1,10 +1,17 @@
 package util;
 
+import java.util.Random;
+
 public enum EyeDirection {
     UP,
     DOWN,
     LEFT,
     RIGHT;
+
+    public static EyeDirection getRandom(Random random) {
+        int index = random.nextInt(EyeDirection.values().length);
+        return EyeDirection.values()[index];
+    }
 
     public EyeDirection getOpposite() {
         return switch (this) {
@@ -33,7 +40,7 @@ public enum EyeDirection {
                 case RIGHT -> DOWN;
             };
         }
-        else if (rotateDirection == MoveDirection.COUNTERCLOCKWISE) {
+        if (rotateDirection == MoveDirection.COUNTERCLOCKWISE) {
             return switch (this) {
                 case UP -> LEFT;
                 case DOWN -> RIGHT;
@@ -43,5 +50,33 @@ public enum EyeDirection {
         }
 
         throw new IllegalArgumentException("Supplied MoveDirection must be a rotation");
+    }
+
+    // default EyeDirection is UP
+    public EyeDirection relativeTo(EyeDirection facing) {
+        return switch (facing) {
+            case UP -> this;
+            case DOWN -> this.getOpposite();
+            case LEFT -> this.rotate(MoveDirection.CLOCKWISE);
+            case RIGHT -> this.rotate(MoveDirection.COUNTERCLOCKWISE);
+        };
+    }
+
+    public int relativeX(int x, int y) {
+        return switch (this) {
+            case UP -> x;
+            case DOWN -> -x;
+            case LEFT -> y;
+            case RIGHT -> -y;
+        };
+    }
+
+    public int relativeY(int x, int y) {
+        return switch (this) {
+            case UP -> y;
+            case DOWN -> -y;
+            case LEFT -> x;
+            case RIGHT -> -x;
+        };
     }
 }
