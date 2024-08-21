@@ -3,7 +3,7 @@ package creature;
 import creature.cell.Cell;
 import creature.cell.FoodCell;
 import creature.cell.LivingCell;
-import creature.cell.LivingCellFactory;
+import creature.cell.CellFactory;
 import creature.cell.cells.foodcells.EggCell;
 import creature.cell.cells.livingcells.BrainCell;
 import creature.cell.cells.livingcells.EyeCell;
@@ -16,13 +16,29 @@ import util.MoveDirection;
 import java.util.*;
 
 public class Creature {
-    public static int EGG_THROW_RANGE = 5;
+    public static int EGG_THROW_RANGE = 8;
+    public static String[] BODY_PARAMS = new String[]{
+            "name:",
+            "maxAge:",
+            "pubertyAge:",
+            "reproductionEnergy:",
+            "mutationChance:",
+            "mutationSeverity:",
+            "moveCooldown:",
+            "facing:",
+            "alive:",
+            "age:",
+            "energy:",
+            "births:",
+    };
 
-    private final LivingCell[] cells;
+    protected final LivingCell[] cells;
+
     private final BrainCell brain;
     private final EyeCell[] eyes;
     private final Random random;
     private final int maxMoveCooldown;
+    private final String name;
 
     private final int maxAge;
     private final int pubertyAge;
@@ -39,6 +55,10 @@ public class Creature {
     private int births;
 
     public Creature(LivingCell[] cells, Random random, int maxAge, int pubertyAge, int reproductionEnergy, float mutationChance, int mutationSeverity) {
+        this(cells, random, maxAge, pubertyAge, reproductionEnergy, mutationChance, mutationSeverity, true);
+    }
+
+    public Creature(LivingCell[] cells, Random random, int maxAge, int pubertyAge, int reproductionEnergy, float mutationChance, int mutationSeverity, boolean doMutate) {
         this.random = random;
 
         LivingCell[] myCells = new LivingCell[cells.length];
@@ -47,34 +67,59 @@ public class Creature {
         for (int i = 0; i < cells.length; i++) {
             LivingCell cell = cells[i];
 
-            myCells[i] = LivingCellFactory.copyToOwner(cell, this);
+            myCells[i] = CellFactory.copyToOwner(cell, this);
 
-            if (cell instanceof BrainCell brainCell && brain == null)
+            if (myCells[i] instanceof BrainCell brainCell && brain == null)
                 brain = brainCell;
             }
         if (brain == null)
             throw new NoSuchElementException("No Brain found");
 
-        this.cells = mutateBody(myCells, mutationChance, mutationSeverity);
         this.brain = brain;
+
+        if (doMutate) {
+            this.cells = mutateBody(myCells, mutationChance, mutationSeverity);
+
+            this.maxAge = mutate(maxAge, mutationChance, mutationSeverity);
+            this.pubertyAge = mutate(pubertyAge, mutationChance, mutationSeverity, maxAge);
+            this.reproductionEnergy = mutate(reproductionEnergy, mutationChance, mutationSeverity * 10);
+
+            this.mutationChance = mutate(mutationChance, mutationChance, mutationSeverity);
+            // don't want mutationSeverity to change as much to prevent extreme scaling
+            this.mutationSeverity = mutate(mutationSeverity, mutationChance / 2, mutationSeverity / 2 + 1);
+        } else {
+            this.cells = myCells;
+
+            this.maxAge = maxAge;
+            this.pubertyAge = pubertyAge;
+            this.reproductionEnergy = reproductionEnergy;
+
+            this.mutationChance = mutationChance;
+            this.mutationSeverity = mutationSeverity;
+        }
+
         this.eyes = Arrays.stream(this.cells).filter(s -> s instanceof EyeCell).map(s -> (EyeCell) s).toArray(EyeCell[]::new);
+
         int legs = (int) Arrays.stream(this.cells).filter(s -> s instanceof LegCell).count();
-        this.maxMoveCooldown = Math.max(this.cells.length - (legs * LegCell.MAX_CARRY), 0);
+        this.maxMoveCooldown = legs > 0 ? Math.max(this.cells.length - (legs * LegCell.MAX_CARRY), 0) : -1;
         this.moveCooldown = 0;
+
+        this.name = brain.toSpeciesString();
 
         this.facing = EyeDirection.UP;
 
         this.alive = true;
         this.age = 0;
-        this.maxAge = mutate(maxAge, mutationChance, mutationSeverity);
-        this.pubertyAge = mutate(pubertyAge, mutationChance, mutationSeverity, maxAge);
 
-        this.energy = reproductionEnergy;
-        this.reproductionEnergy = mutate(reproductionEnergy, mutationChance, mutationSeverity * 10);
+        this.energy = reproductionEnergy - 10;
+    }
 
-        this.mutationChance = mutate(mutationChance, mutationChance, mutationSeverity);
-        // don't want mutationSeverity to change as much to prevent extreme scaling
-        this.mutationSeverity = mutate(mutationSeverity, mutationChance / 2, mutationSeverity / 2 + 1);
+    public static Creature defaultCreature(LivingCell[] cells, Random random) {
+        return new Creature(cells, random, 100, 20, 200, 0.1F, 1, false);
+    }
+
+    public Creature copyTo(LivingCell[] cells) {
+        return new Creature(cells, random, maxAge, pubertyAge, reproductionEnergy, mutationChance, mutationSeverity, false);
     }
 
     public Creature makeChild() {
@@ -97,6 +142,10 @@ public class Creature {
         return facing;
     }
 
+    public BrainCell getBrain() {
+        return brain;
+    }
+
     public boolean isAlive() {
         return alive;
     }
@@ -109,10 +158,9 @@ public class Creature {
         return energy - reproductionEnergy;
     }
 
-    public void setSpatial(int x, int y) {
+    public void setSpatial(int row, int col) {
         for (LivingCell cell: cells) {
-            cell.setX(x + cell.getRelativeX());
-            cell.setY(y + cell.getRelativeY());
+            cell.setCoords(row + cell.getRelativeX(), col + cell.getRelativeY());
         }
     }
 
@@ -124,8 +172,7 @@ public class Creature {
         }
 
         for (LivingCell cell: cells) {
-            cell.setX(x + facing.relativeX(cell.getRelativeX(), cell.getRelativeY()));
-            cell.setY(y + facing.relativeY(cell.getRelativeX(), cell.getRelativeY()));
+            cell.setCoords(x + facing.relativeX(cell.getRelativeX(), cell.getRelativeY()), y + facing.relativeY(cell.getRelativeX(), cell.getRelativeY()));
         }
     }
 
@@ -216,10 +263,10 @@ public class Creature {
                             case LEFT -> targetX--;
                             case RIGHT -> targetX++;
                         }
+
                         LivingCell[] output = new LivingCell[oldCells.length + 1];
-                        for (int i = 0; i < oldCells.length; i++)
-                            output[i] = oldCells[i];
-                        output[oldCells.length] = LivingCellFactory.mutateNewCell(this, targetX, targetY, random);
+                        System.arraycopy(oldCells, 0, output, 0, oldCells.length);
+                        output[oldCells.length] = CellFactory.mutateNewCell(this, targetX, targetY, random);
                         return output;
                     }
                 }
@@ -227,7 +274,7 @@ public class Creature {
                     int replacedIndex = random.nextInt(oldCells.length);
                     LivingCell cellToReplace = oldCells[replacedIndex];
                     if (!(cellToReplace instanceof BrainCell)) {
-                        oldCells[replacedIndex] = LivingCellFactory.mutateNewCell(this, cellToReplace.getRelativeX(), cellToReplace.getRelativeY(), random);
+                        oldCells[replacedIndex] = CellFactory.mutateNewCell(this, cellToReplace.getRelativeX(), cellToReplace.getRelativeY(), random);
                         return oldCells;
                     }
                 }
@@ -237,7 +284,7 @@ public class Creature {
                         LivingCell cellToRemove = oldCells[removeIndex];
 
                         if (!(cellToRemove instanceof BrainCell)) {
-                            LivingCell[] output = new LivingCell[oldCells.length + 1];
+                            LivingCell[] output = new LivingCell[oldCells.length - 1];
                             for (int i = 0; i < oldCells.length; i++) {
                                 if (i == removeIndex) continue;
                                 if (i > removeIndex)
@@ -253,12 +300,13 @@ public class Creature {
         return oldCells;
     }
 
-    public void moveTick(Cell[][] mat) {
-        HashMap<EyeDirection, ArrayList<Cell>> visibleCells = new HashMap<>();
-        for (EyeCell eye: eyes) {
-            if (!visibleCells.containsKey(eye.getFacing()))
-                visibleCells.put(eye.getFacing(), eye.getVisible(mat));
-            else visibleCells.get(eye.getFacing()).addAll(eye.getVisible(mat));
+    public void moveTick(Grid grid) {
+        if (maxMoveCooldown < 0) {
+            if (energy > reproductionEnergy) {
+                brain.makeDecision(EyeDirection.getCellHashMap(), facing, canReproduce(), getEnergyAfterReproduction(), false);
+                makeMove(grid, brain.getDecision());
+            }
+            return;
         }
 
         // can only move when moveCooldown == 0
@@ -268,11 +316,16 @@ public class Creature {
         }
         moveCooldown = maxMoveCooldown;
 
-        brain.makeDecision(visibleCells, facing, canReproduce(), getEnergyAfterReproduction());
+        Cell[][] mat = grid.getCellMatrix();
+        HashMap<EyeDirection, ArrayList<Cell>> visibleCells = EyeDirection.getCellHashMap();
+        for (EyeCell eye: eyes)
+            visibleCells.get(eye.getFacing()).addAll(eye.getVisible(mat));
+
+        brain.makeDecision(visibleCells, facing, canReproduce(), getEnergyAfterReproduction(), true);
         MoveDirection decision = brain.getDecision();
         if (!canMakeMove(mat, decision))
             decision = MoveDirection.NEUTRAL;
-        makeMove(mat, decision);
+        makeMove(grid, decision);
     }
 
     public boolean canMakeMove(Cell[][] mat, MoveDirection moveDirection) {
@@ -280,13 +333,27 @@ public class Creature {
             return true;
 
         for (LivingCell cell: cells) {
-            int newCellX = cell.getX();
-            int newCellY = cell.getY();
-            switch (moveDirection) {
-                case UP -> newCellY--;
-                case DOWN -> newCellY++;
-                case LEFT -> newCellX--;
-                case RIGHT -> newCellX++;
+            int newCellX;
+            int newCellY;
+
+            if (moveDirection.isRotation()) {
+                EyeDirection newFacing = facing.rotate(moveDirection);
+
+                int newRelX = newFacing.relativeX(cell.getRelativeX(), cell.getRelativeY());
+                int newRelY = newFacing.relativeY(cell.getRelativeX(), cell.getRelativeY());
+
+                newCellX = brain.getRow() + newRelX;
+                newCellY = brain.getCol() + newRelY;
+            } else {
+                newCellX = cell.getRow();
+                newCellY = cell.getCol();
+
+                switch (moveDirection) {
+                    case UP -> newCellY--;
+                    case DOWN -> newCellY++;
+                    case LEFT -> newCellX--;
+                    case RIGHT -> newCellX++;
+                }
             }
 
             if (mat[newCellX][newCellY] == null || mat[newCellX][newCellY] instanceof LivingCell otherCell && otherCell.getOwner() == this)
@@ -297,23 +364,26 @@ public class Creature {
         return true;
     }
 
-    public void makeMove(Cell[][] mat, MoveDirection moveDirection) {
+    public void makeMove(Grid grid, MoveDirection moveDirection) {
+        Cell[][] mat = grid.getCellMatrix();
+
         if (moveDirection == MoveDirection.NEUTRAL)
             return;
         if (moveDirection == MoveDirection.REPRODUCE) {
             int freeSpaces = 0;
-            for (int r = brain.getX() - EGG_THROW_RANGE; r < brain.getX() + EGG_THROW_RANGE + 1; r++)
-                for (int c = brain.getY() - EGG_THROW_RANGE; c < brain.getY() + EGG_THROW_RANGE + 1; c++)
-                    if (Grid.isEmptyAtCell(mat, r, c))
+            for (int r = brain.getRow() - EGG_THROW_RANGE; r < brain.getRow() + EGG_THROW_RANGE + 1; r++)
+                for (int c = brain.getCol() - EGG_THROW_RANGE; c < brain.getCol() + EGG_THROW_RANGE + 1; c++)
+                    if (Grid.isEmptyAtCell(mat, r, c)) {
                         freeSpaces++;
+                    }
 
             int targetSpace = random.nextInt(0, freeSpaces + 1);
             int passedSpaces = 0;
-            for (int r = brain.getX() - EGG_THROW_RANGE; r < brain.getX() + EGG_THROW_RANGE + 1; r++)
-                for (int c = brain.getY() - EGG_THROW_RANGE; c < brain.getY() + EGG_THROW_RANGE + 1; c++)
+            for (int r = brain.getRow() - EGG_THROW_RANGE; r < brain.getRow() + EGG_THROW_RANGE + 1; r++)
+                for (int c = brain.getCol() - EGG_THROW_RANGE; c < brain.getCol() + EGG_THROW_RANGE + 1; c++)
                     if (Grid.isEmptyAtCell(mat, r, c)) {
                         if (targetSpace == passedSpaces) {
-                            reproduce(mat, r, c);
+                            reproduce(grid, r, c);
                             return;
                         }
                         passedSpaces++;
@@ -325,18 +395,21 @@ public class Creature {
             facing = facing.rotate(moveDirection);
         }
 
-        for (LivingCell cell: cells)
-            mat[cell.getX()][cell.getY()] = null;
+        for (LivingCell cell: cells) {
+            mat[cell.getRow()][cell.getCol()] = null;
+            grid.queueUpdate(cell.getRow(), cell.getCol());
+        }
+
         for (LivingCell cell: cells) {
             int newCellX, newCellY;
 
             if (moveDirection.isRotation()) {
-                newCellX = brain.getX() + facing.relativeX(cell.getRelativeX(), cell.getRelativeY());
-                newCellY = brain.getY() + facing.relativeY(cell.getRelativeX(), cell.getRelativeY());
+                newCellX = brain.getRow() + facing.relativeX(cell.getRelativeX(), cell.getRelativeY());
+                newCellY = brain.getCol() + facing.relativeY(cell.getRelativeX(), cell.getRelativeY());
             }
             else {
-                newCellX = cell.getX();
-                newCellY = cell.getY();
+                newCellX = cell.getRow();
+                newCellY = cell.getCol();
 
                 switch (moveDirection) {
                     case UP -> newCellY--;
@@ -347,8 +420,8 @@ public class Creature {
             }
 
             mat[newCellX][newCellY] = cell;
-            cell.setX(newCellX);
-            cell.setY(newCellY);
+            cell.setCoords(newCellX, newCellY);
+            grid.queueUpdate(cell.getRow(), cell.getCol());
 
             cell.onMove(moveDirection);
         }
@@ -356,6 +429,7 @@ public class Creature {
 
     public void tick(Cell[][] mat) {
         for (LivingCell cell: cells) {
+            energy -= cell.getCost(maxMoveCooldown >= 0 && moveCooldown == maxMoveCooldown);
             cell.tick(mat);
         }
 
@@ -369,9 +443,9 @@ public class Creature {
         cell.kill();
     }
 
-    public void reproduce(Cell[][] mat, int targetX, int targetY) {
+    public void reproduce(Grid grid, int targetRow, int targetCol) {
         Creature child = makeChild();
-        mat[targetX][targetY] = new EggCell(child);
+        grid.addFood(new EggCell(child), targetRow, targetCol);
         energy -= reproductionEnergy;
         births++;
     }
@@ -382,5 +456,39 @@ public class Creature {
 
     private void die() {
         alive = false;
+    }
+
+    public String[] getParamValues() {
+        return new String[]{
+                name,
+                Cell.format(maxAge),
+                Cell.format(pubertyAge),
+                Cell.format(reproductionEnergy),
+                Cell.format(mutationChance),
+                Cell.format(mutationSeverity),
+                Cell.format(moveCooldown),
+                Cell.format(facing),
+                Cell.format(alive),
+                Cell.format(age),
+                Cell.format(energy),
+                Cell.format(births),
+        };
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(brain.toSpeciesString());
+        builder.append('-');
+
+        for (LivingCell cell: cells)
+            if (!(cell instanceof BrainCell)) {
+                builder.append(cell.toSpeciesString());
+                builder.append(brain.getCharFromValue(cell.getRelativeX()));
+                builder.append(brain.getCharFromValue(cell.getRelativeY()));
+            }
+
+        return builder.toString();
     }
 }

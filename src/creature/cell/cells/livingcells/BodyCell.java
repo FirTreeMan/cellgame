@@ -2,11 +2,25 @@ package creature.cell.cells.livingcells;
 
 import creature.Creature;
 import creature.cell.LivingCell;
-
-import java.awt.*;
+import util.Cells;
 
 public class BodyCell extends LivingCell {
     public BodyCell(Creature owner, int relativeRow, int relativeCol) {
-        super(owner, new Color(252, 172, 35), 5, 5, relativeRow, relativeCol);
+        super(owner, Cells.BODY.get(), 5, 5, relativeRow, relativeCol);
+    }
+
+    @Override
+    public String toSpeciesString() {
+        return "B";
+    }
+
+    @Override
+    public String getName() {
+        return "Body";
+    }
+
+    @Override
+    public String getDescription() {
+        return Cells.BODY.getDescription();
     }
 }

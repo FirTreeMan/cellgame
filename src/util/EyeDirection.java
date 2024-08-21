@@ -1,5 +1,9 @@
 package util;
 
+import creature.cell.Cell;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 public enum EyeDirection {
@@ -7,6 +11,20 @@ public enum EyeDirection {
     DOWN,
     LEFT,
     RIGHT;
+
+    public static HashMap<EyeDirection, ArrayList<Cell>> getCellHashMap() {
+        HashMap<EyeDirection, ArrayList<Cell>> hashMap = new HashMap<>(4);
+        for (EyeDirection eyeDirection: values())
+            hashMap.put(eyeDirection, new ArrayList<>());
+        return hashMap;
+    }
+
+    public static HashMap<EyeDirection, Float> getFloatHashMap() {
+        HashMap<EyeDirection, Float> hashMap = new HashMap<>(4);
+        for (EyeDirection eyeDirection: values())
+            hashMap.put(eyeDirection, 0.0F);
+        return hashMap;
+    }
 
     public static EyeDirection getRandom(Random random) {
         int index = random.nextInt(EyeDirection.values().length);

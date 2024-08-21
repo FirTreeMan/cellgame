@@ -3,10 +3,11 @@ package creature.cell.cells.livingcells;
 import creature.Creature;
 import creature.cell.Cell;
 import creature.cell.LivingCell;
+import util.CellAttrs;
+import util.Cells;
 import util.EyeDirection;
 import util.MoveDirection;
 
-import java.awt.*;
 import java.util.ArrayList;
 
 public class EyeCell extends LivingCell {
@@ -14,7 +15,7 @@ public class EyeCell extends LivingCell {
     private EyeDirection facing;
 
     public EyeCell(Creature owner, int relativeRow, int relativeCol, EyeDirection facing) {
-        super(owner, new Color(207, 31, 154), 10, 5, relativeRow, relativeCol);
+        super(owner, Cells.EYE.get(), 10, 5, relativeRow, relativeCol);
         this.originalFacing = facing;
         this.facing = facing;
     }
@@ -32,24 +33,24 @@ public class EyeCell extends LivingCell {
 
         switch (facing) {
             case UP -> {
-                cellRay(mat, visible, getX() - 1, getY() - 1);
-                cellRay(mat, visible, getX(), getY() - 1);
-                cellRay(mat, visible, getX() + 1, getY() - 1);
+                cellRay(mat, visible, getRow() - 1, getCol() - 1);
+                cellRay(mat, visible, getRow(), getCol() - 1);
+                cellRay(mat, visible, getRow() + 1, getCol() - 1);
             }
             case DOWN -> {
-                cellRay(mat, visible, getX() - 1, getY() + 1);
-                cellRay(mat, visible, getX(), getY() + 1);
-                cellRay(mat, visible, getX() + 1, getY() + 1);
+                cellRay(mat, visible, getRow() - 1, getCol() + 1);
+                cellRay(mat, visible, getRow(), getCol() + 1);
+                cellRay(mat, visible, getRow() + 1, getCol() + 1);
             }
             case LEFT -> {
-                cellRay(mat, visible, getX() - 1, getY() - 1);
-                cellRay(mat, visible, getX() - 1, getY());
-                cellRay(mat, visible, getX() - 1, getY() + 1);
+                cellRay(mat, visible, getRow() - 1, getCol() - 1);
+                cellRay(mat, visible, getRow() - 1, getCol());
+                cellRay(mat, visible, getRow() - 1, getCol() + 1);
             }
             case RIGHT -> {
-                cellRay(mat, visible, getX() + 1, getY() - 1);
-                cellRay(mat, visible, getX() + 1, getY());
-                cellRay(mat, visible, getX() + 1, getY() + 1);
+                cellRay(mat, visible, getRow() + 1, getCol() - 1);
+                cellRay(mat, visible, getRow() + 1, getCol());
+                cellRay(mat, visible, getRow() + 1, getCol() + 1);
             }
         }
 
@@ -91,4 +92,24 @@ public class EyeCell extends LivingCell {
             facing = facing.rotate(moveDirection);
     }
 
+    @Override
+    public String toSpeciesString() {
+        return "E";
+    }
+
+    @Override
+    public String getAttr(CellAttrs attr) {
+        if (attr == CellAttrs.FACING) return String.valueOf(facing);
+        return super.getAttr(attr);
+    }
+
+    @Override
+    public String getName() {
+        return "Eye";
+    }
+
+    @Override
+    public String getDescription() {
+        return Cells.EYE.getDescription();
+    }
 }

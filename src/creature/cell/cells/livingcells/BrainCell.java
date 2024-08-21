@@ -3,16 +3,38 @@ package creature.cell.cells.livingcells;
 import creature.Creature;
 import creature.cell.Cell;
 import creature.cell.LivingCell;
+import util.Cells;
 import util.MoveDirection;
 import util.EyeDirection;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 public class BrainCell extends LivingCell {
+    public static Map<Class<? extends Cell>, Float> DEFAULT_CELL_WEIGHTS = Map.ofEntries(
+
+    );
+    public static Map<EyeDirection, Float> DEFAULT_FACING_WEIGHTS = Map.ofEntries(
+            Map.entry(EyeDirection.UP, 0.0F),
+            Map.entry(EyeDirection.DOWN, 0.0F),
+            Map.entry(EyeDirection.LEFT, 0.0F),
+            Map.entry(EyeDirection.RIGHT, 0.0F)
+    );
+    public static String[] BRAIN_PARAMS = new String[]{
+            "facingUpWeight:",
+            "facingDownWeight:",
+            "facingLeftWeight:",
+            "facingRightWeight:",
+            "eyeDirectionLeak:",
+            "actionThreshold:",
+            "clockwiseTurnThreshold:",
+            "counterClockwiseTurnThreshold:",
+            "reproductionPriority:",
+            "reproductionEnergyRemainder:",
+    };
+
     private final Map<Class<? extends Cell>, Float> cellWeights;
     private final Map<EyeDirection, Float> facingWeights;
     private final HashMap<EyeDirection, Float> eyeDecisionMap;
@@ -23,49 +45,68 @@ public class BrainCell extends LivingCell {
     private final float counterClockwiseTurnThreshold;
     private final float reproductionPriority;
     private final int reproductionEnergyRemainder;
-    private final int reproductionEnergyRemainderRange;
 
     private MoveDirection decision;
     private EyeDirection eyeDecision;
 
-    public BrainCell(Creature owner, int relativeRow, int relativeCol, Map<Class<? extends Cell>, Float> cellWeights, Map<EyeDirection, Float> facingWeights, float eyeDirectionLeak, float actionThreshold, float clockwiseTurnThreshold, float counterClockwiseTurnThreshold, float reproductionPriority, int reproductionEnergyRemainder, int reproductionEnergyRemainderRange) {
-        super(owner, new Color(252, 205, 35), 10, 5, relativeRow, relativeCol);
-        this.cellWeights = mutateMap(cellWeights);
-        this.facingWeights = mutateMap(facingWeights);
+    public BrainCell(Creature owner, int relativeRow, int relativeCol, Map<Class<? extends Cell>, Float> cellWeights, Map<EyeDirection, Float> facingWeights, float eyeDirectionLeak, float actionThreshold, float clockwiseTurnThreshold, float counterClockwiseTurnThreshold, float reproductionPriority, int reproductionEnergyRemainder) {
+        this(owner, relativeRow, relativeCol, cellWeights, facingWeights, eyeDirectionLeak, actionThreshold, clockwiseTurnThreshold, counterClockwiseTurnThreshold, reproductionPriority, reproductionEnergyRemainder, true);
+    }
 
-        this.eyeDirectionLeak = getOwner().mutateCell(eyeDirectionLeak);
-        this.actionThreshold = getOwner().mutateCell(actionThreshold);
-        this.clockwiseTurnThreshold = getOwner().mutateCell(clockwiseTurnThreshold);
-        this.counterClockwiseTurnThreshold = getOwner().mutateCell(counterClockwiseTurnThreshold);
-        this.reproductionPriority = reproductionPriority;
-        this.reproductionEnergyRemainder = reproductionEnergyRemainder;
-        this.reproductionEnergyRemainderRange = reproductionEnergyRemainderRange;
+    public BrainCell(Creature owner, int relativeRow, int relativeCol, Map<Class<? extends Cell>, Float> cellWeights, Map<EyeDirection, Float> facingWeights, float eyeDirectionLeak, float actionThreshold, float clockwiseTurnThreshold, float counterClockwiseTurnThreshold, float reproductionPriority, int reproductionEnergyRemainder, boolean doMutate) {
+        super(owner, Cells.BRAIN.get(), 10, 5, relativeRow, relativeCol);
+
+        if (doMutate) {
+            this.cellWeights = mutateMap(cellWeights);
+            this.facingWeights = mutateMap(facingWeights);
+
+            this.eyeDirectionLeak = getOwner().mutateCell(eyeDirectionLeak);
+            this.actionThreshold = getOwner().mutateCell(actionThreshold);
+            this.clockwiseTurnThreshold = getOwner().mutateCell(clockwiseTurnThreshold);
+            this.counterClockwiseTurnThreshold = getOwner().mutateCell(counterClockwiseTurnThreshold);
+            this.reproductionPriority = getOwner().mutateCell(reproductionPriority);
+            this.reproductionEnergyRemainder = getOwner().mutateCell(reproductionEnergyRemainder);
+        }
+        else {
+            this.cellWeights = cellWeights;
+            this.facingWeights = facingWeights;
+
+            this.eyeDirectionLeak = eyeDirectionLeak;
+            this.actionThreshold = actionThreshold;
+            this.clockwiseTurnThreshold = clockwiseTurnThreshold;
+            this.counterClockwiseTurnThreshold = counterClockwiseTurnThreshold;
+            this.reproductionPriority = reproductionPriority;
+            this.reproductionEnergyRemainder = reproductionEnergyRemainder;
+        }
 
         this.decision = MoveDirection.NEUTRAL;
         this.eyeDecision = EyeDirection.UP;
-        this.eyeDecisionMap = new HashMap<>(4);
-        this.leakMap = new HashMap<>(4);
+        this.eyeDecisionMap = EyeDirection.getFloatHashMap();
+        this.leakMap = EyeDirection.getFloatHashMap();
+    }
+
+    public static BrainCell defaultBrain(Creature owner) {
+        return new BrainCell(owner, 0, 0, DEFAULT_CELL_WEIGHTS, DEFAULT_FACING_WEIGHTS, 0.02F, 0.01F, 0.04F, 0.04F, 0.1F, 200, false);
     }
 
     public MoveDirection getDecision() {
         return decision;
     }
 
-    public void makeDecision(HashMap<EyeDirection, ArrayList<Cell>> visibleCells, EyeDirection facing, boolean canReproduce, int energyAfterReproduction) {
+    public void makeDecision(HashMap<EyeDirection, ArrayList<Cell>> visibleCells, EyeDirection facing, boolean canReproduce, int energyAfterReproduction, boolean hasLegs) {
         makeEyeDecision(visibleCells);
-        decision = calcDecisionFromEyeDecision(facing, canReproduce, energyAfterReproduction);
+        decision = calcDecisionFromEyeDecision(facing, canReproduce, energyAfterReproduction, hasLegs);
     }
 
-    public MoveDirection calcDecisionFromEyeDecision(EyeDirection facing, boolean canReproduce, int energyAfterReproduction) {
+    public MoveDirection calcDecisionFromEyeDecision(EyeDirection facing, boolean canReproduce, int energyAfterReproduction, boolean hasLegs) {
         float eyeDecisionWeight = eyeDecisionMap.get(eyeDecision) + facingWeights.get(eyeDecision.relativeTo(facing));
 
         if (eyeDecisionWeight < reproductionPriority) {
             if (canReproduce &&
-                    // reproductionEnergyRemainder - reproductionEnergyRemainderRange < energyAfterReproduction < reproductionEnergyRemainder + reproductionEnergyRemainderRange
-                    Math.abs(energyAfterReproduction - reproductionEnergyRemainder) < reproductionEnergyRemainderRange)
+                    energyAfterReproduction - reproductionEnergyRemainder > 0)
                 return MoveDirection.REPRODUCE;
         }
-        if (eyeDecisionWeight < actionThreshold) {
+        if (!hasLegs || eyeDecisionWeight < actionThreshold) {
             return MoveDirection.NEUTRAL;
         }
 
@@ -84,6 +125,9 @@ public class BrainCell extends LivingCell {
     }
 
     public void makeEyeDecision(HashMap<EyeDirection, ArrayList<Cell>> visibleCells) {
+        eyeDecisionMap.replaceAll((d, v) -> 0.0F);
+        leakMap.replaceAll((d, v) -> 0.0F);
+
         for (EyeDirection eyeDirection: EyeDirection.values()) {
             float eyeWeight = calcEyeWeight(visibleCells.get(eyeDirection).toArray(Cell[]::new));
             if (eyeWeight > 0) {
@@ -113,6 +157,25 @@ public class BrainCell extends LivingCell {
 
         return eyeWeight;
     }
+
+    public BrainCell copyToOwner(Creature newOwner) {
+        return new BrainCell(newOwner, getRelativeX(), getRelativeY(), cellWeights, facingWeights, eyeDirectionLeak, actionThreshold, clockwiseTurnThreshold, counterClockwiseTurnThreshold, reproductionPriority, reproductionEnergyRemainder);
+    }
+
+    public String[] getParamValues() {
+        return new String[]{
+                format(facingWeights.get(EyeDirection.UP)),
+                format(facingWeights.get(EyeDirection.DOWN)),
+                format(facingWeights.get(EyeDirection.LEFT)),
+                format(facingWeights.get(EyeDirection.RIGHT)),
+                format(eyeDirectionLeak),
+                format(actionThreshold),
+                format(clockwiseTurnThreshold),
+                format(counterClockwiseTurnThreshold),
+                format(reproductionPriority),
+                format(reproductionEnergyRemainder),
+        };
+    }
     
     private <T> Map<T, Float> mutateMap(Map<T, Float> map) {
         HashMap<T, Float> mutatedMap = new HashMap<>(map);
@@ -124,5 +187,46 @@ public class BrainCell extends LivingCell {
         }
         
         return Collections.unmodifiableMap(mutatedMap);
+    }
+
+    public char getCharFromValue(float val) {
+        return getCharFromValue((int) (val * 1000));
+    }
+
+    // char in [A-Za-z]
+    public char getCharFromValue(int val) {
+        int out = val * 100;
+        out %= 52;
+        if (out >= 26)
+            out += 32 - 26;
+        return (char) (out + 65);
+    }
+
+    @Override
+    public String toSpeciesString() {
+        StringBuilder builder = new StringBuilder();
+
+        DEFAULT_CELL_WEIGHTS.keySet().forEach(s ->
+                builder.append(getCharFromValue(cellWeights.get(s))));
+        DEFAULT_FACING_WEIGHTS.keySet().forEach(s ->
+                builder.append(getCharFromValue(facingWeights.get(s))));
+        builder.append(getCharFromValue(eyeDirectionLeak));
+        builder.append(getCharFromValue(actionThreshold));
+        builder.append(getCharFromValue(clockwiseTurnThreshold));
+        builder.append(getCharFromValue(counterClockwiseTurnThreshold));
+        builder.append(getCharFromValue(reproductionPriority));
+        builder.append(getCharFromValue(reproductionEnergyRemainder));
+
+        return builder.toString();
+    }
+
+    @Override
+    public String getName() {
+        return "Brain";
+    }
+
+    @Override
+    public String getDescription() {
+        return Cells.BRAIN.getDescription();
     }
 }

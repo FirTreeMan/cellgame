@@ -3,6 +3,7 @@ package creature.cell.cells.foodcells;
 import creature.Creature;
 import creature.cell.FoodCell;
 import creature.cell.HatchableCell;
+import util.Cells;
 
 import java.awt.*;
 
@@ -13,11 +14,21 @@ public class EggCell extends FoodCell implements HatchableCell {
     private int ticksPassed;
 
     public EggCell(Creature creature) {
-        super(new Color(237, 198, 26), 1000, true);
+        super(Cells.EGG.get(), 1000, true);
 
         this.creature = creature;
         this.incubationTicks = creature.getCellCount();
         this.ticksPassed = 0;
+    }
+
+    @Override
+    public String getName() {
+        return "Egg";
+    }
+
+    @Override
+    public String getDescription() {
+        return Cells.EGG.getDescription();
     }
 
     @Override
