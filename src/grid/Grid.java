@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Random;
 
 public class Grid {
+    public static Color SELECTED_COLOR = new Color(252, 255, 125);
     public static Color EMPTY_COLOR = new Color(40, 40, 40);
     public static String EMPTY_TOOLTIP = "Nothing at all.";
 
@@ -73,6 +74,10 @@ public class Grid {
         return cellMatrix[row][col] == null ? Grid.EMPTY_COLOR : cellMatrix[row][col].getColor();
     }
 
+    public boolean inBounds(int row, int col) {
+        return row >= 0 && row < cellMatrix.length && col >= 0 && col < cellMatrix[0].length;
+    }
+
     public void addCreature(Creature creature, int row, int col) {
         creature.setSpatial(row, col);
         for (LivingCell cell: creature.getCells()) {
@@ -85,6 +90,7 @@ public class Grid {
             }
             cell.addSelfToGrid(this);
         }
+
         creatures.addElement(creature);
     }
 

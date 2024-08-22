@@ -18,9 +18,10 @@ import javax.swing.colorchooser.AbstractColorChooserPanel;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 public class BaseFrame extends JFrame {
-    private Grid grid;
+    private final Grid grid;
     private CellUIPanel gridUI;
     private CreatureViewerPanel creatureViewerPanel;
 
@@ -32,16 +33,17 @@ public class BaseFrame extends JFrame {
                 Cell cell = cellUI.getCell();
 
                 if (gridUI.isExamining()) {
-                    if (cell instanceof LivingCell livingCell)
+                    if (cell instanceof LivingCell livingCell) {
                         creatureViewerPanel.loadCreature(livingCell.getOwner());
+                        refreshGridUI();
+                    }
                 } else {
                     Creature creature = creatureViewerPanel.makeCreature();
                     if (creature == null) return;
 
                     grid.addCreature(creature, cellUI.getRow(), cellUI.getCol());
                     creatureViewerPanel.loadCreature(creature);
-//                    gridUI.setExamining(true);
-                    gridUI.refresh();
+                    refreshGridUI();
                 }
             }
         }, grid, 15);
@@ -49,14 +51,8 @@ public class BaseFrame extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        JScrollPane gridScrollPane = new JScrollPane(gridUI) {
-            @Override
-            public Dimension getPreferredSize() {
-                return new Dimension(550, 550);
-            }
-        };
-        gridScrollPane.setBorder(new TitledBorder(new EtchedBorder(), "Map", TitledBorder.CENTER, TitledBorder.DEFAULT_POSITION));
-        add(gridScrollPane, BorderLayout.CENTER);
+        JPanel mapPanel = getMapPanel();
+        add(mapPanel, BorderLayout.CENTER);
 
         this.creatureViewerPanel = getCreatureViewerPanel(creatureView);
         add(creatureViewerPanel, BorderLayout.EAST);
@@ -66,6 +62,35 @@ public class BaseFrame extends JFrame {
 
         JPanel controlPanel = getControlPanel();
         add(controlPanel, BorderLayout.SOUTH);
+    }
+
+    private JPanel getMapPanel() {
+        JPanel mapPanel = new JPanel(new GridBagLayout());
+        mapPanel.setBorder(new TitledBorder(new EtchedBorder(), "Map", TitledBorder.CENTER, TitledBorder.DEFAULT_POSITION));
+
+        JScrollPane gridScrollPane = new JScrollPane(gridUI) {
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(550, 550);
+            }
+        };
+
+        JSlider gridScaleSlider = new JSlider(JSlider.HORIZONTAL, 1, 35, 15);
+        gridScaleSlider.addChangeListener(e -> gridUI.setCellSize(gridScaleSlider.getValue()));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridy = 0;
+        mapPanel.add(gridScrollPane, gbc);
+        gbc.weightx = 0;
+        gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.gridy = 1;
+        mapPanel.add(gridScaleSlider, gbc);
+
+        return mapPanel;
     }
 
     private ActionListener getInsertButtonActionListener(JButton insertButton) {
@@ -89,19 +114,22 @@ public class BaseFrame extends JFrame {
         confirmButton.setForeground(Color.GREEN);
         confirmButton.addActionListener(e -> {
             creatureViewerPanel.confirmChanges();
-            gridUI.refresh();
+            refreshGridUI();
         });
         JButton insertButton = new JButton("Insert copy into Map");
         insertButton.setForeground(Color.BLUE);
         insertButton.addActionListener(getInsertButtonActionListener(insertButton));
         JButton clearButton = new JButton("Clear");
         clearButton.setForeground(Color.MAGENTA);
-        clearButton.addActionListener(e -> creatureViewerPanel.clear());
+        clearButton.addActionListener(e -> {
+            creatureViewerPanel.clear();
+            refreshGridUI();
+        });
         JButton killButton = new JButton("Kill creature");
         killButton.setForeground(Color.RED);
         killButton.addActionListener(e -> {
             creatureViewerPanel.killCreature();
-            gridUI.refresh();
+            refreshGridUI();
         });
         JButton saveButton = new JButton("Save creature");
         saveButton.setForeground(Color.GRAY);
@@ -206,9 +234,10 @@ public class BaseFrame extends JFrame {
         return creatureViewerPanel;
     }
 
-    private <E> JScrollPane getScrollableListPanel(JList<E> list, String title) {
+    private <E> JScrollPane getScrollableListPanel(JList<E> list, String title, Consumer<E> consumer) {
         list.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
         list.setVisibleRowCount(-1);
+        list.addListSelectionListener(e -> consumer.accept(list.getSelectedValue()));
 
         JScrollPane scrollPane = new JScrollPane(list);
         scrollPane.setPreferredSize(new Dimension(100, (int) scrollPane.getPreferredSize().getHeight()));
@@ -220,8 +249,11 @@ public class BaseFrame extends JFrame {
     private JPanel getEntityListPanel() {
         JPanel entityListPanel = new JPanel(new GridLayout(0, 1));
 
-        JScrollPane creatureScrollPane = getScrollableListPanel(new JList<>(grid.getCreatures()), "Creatures");
-        JScrollPane foodScrollPane = getScrollableListPanel(new JList<>(grid.getFood()), "Food");
+        JScrollPane creatureScrollPane = getScrollableListPanel(new JList<>(grid.getCreatures()), "Creatures", s -> {
+            creatureViewerPanel.loadCreature(s);
+            refreshGridUI();
+        });
+        JScrollPane foodScrollPane = getScrollableListPanel(new JList<>(grid.getFood()), "Food", s -> {});
 
         entityListPanel.add(creatureScrollPane);
         entityListPanel.add(foodScrollPane);
@@ -236,7 +268,7 @@ public class BaseFrame extends JFrame {
 
         ActionListener tickListener = e -> {
             grid.tick();
-            gridUI.refresh();
+            refreshGridUI();
             creatureViewerPanel.updateBodyParams();
         };
 
@@ -268,6 +300,10 @@ public class BaseFrame extends JFrame {
         controlPanel.add(runButton);
 
         return controlPanel;
+    }
+
+    private void refreshGridUI() {
+        gridUI.refresh(creatureViewerPanel.getCreature());
     }
 
     public void createAndShowGUI() {

@@ -7,16 +7,11 @@ import java.awt.*;
 
 public class MeatCell extends FoodCell {
     public MeatCell() {
-        super(Cells.MEAT.get(), 1000, true);
+        super(Cells.MEAT, 500, true);
     }
 
     @Override
     public String getName() {
         return "Meat";
-    }
-
-    @Override
-    public String getDescription() {
-        return Cells.MEAT.getDescription();
     }
 }

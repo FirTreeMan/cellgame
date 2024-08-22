@@ -1,6 +1,7 @@
 package creature.cell;
 
 import creature.Creature;
+import util.Cells;
 import util.MoveDirection;
 
 import java.awt.*;
@@ -14,8 +15,8 @@ public abstract class LivingCell extends Cell {
 
     private boolean alive;
 
-    public LivingCell(Creature owner, Color color, int tickCost, int moveCost, int relativeRow, int relativeCol) {
-        super(owner, color);
+    public LivingCell(Creature owner, Cells cellEnum, int tickCost, int moveCost, int relativeRow, int relativeCol) {
+        super(owner, cellEnum);
         this.tickCost = tickCost;
         this.moveCost = moveCost;
         this.relativeRow = relativeRow;
@@ -45,7 +46,7 @@ public abstract class LivingCell extends Cell {
             nearby[1] = mat[getRow() + 1][getCol()];
         if (getCol() > 0)
             nearby[2] = mat[getRow()][getCol() - 1];
-        if (getCol() < mat[0].length)
+        if (getCol() < mat[0].length - 1)
             nearby[3] = mat[getRow()][getCol() + 1];
 
         return nearby;

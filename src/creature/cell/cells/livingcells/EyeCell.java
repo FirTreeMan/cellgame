@@ -9,55 +9,36 @@ import util.EyeDirection;
 import util.MoveDirection;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class EyeCell extends LivingCell {
-    private final EyeDirection originalFacing;
-    private EyeDirection facing;
-
-    public EyeCell(Creature owner, int relativeRow, int relativeCol, EyeDirection facing) {
-        super(owner, Cells.EYE.get(), 10, 5, relativeRow, relativeCol);
-        this.originalFacing = facing;
-        this.facing = facing;
+    public EyeCell(Creature owner, int relativeRow, int relativeCol) {
+        super(owner, Cells.EYE, 5, 5, relativeRow, relativeCol);
     }
 
-    public EyeDirection getOriginalFacing() {
-        return originalFacing;
+    public HashMap<EyeDirection, ArrayList<Cell>> getVisible(Cell[][] mat) {
+        HashMap<EyeDirection, ArrayList<Cell>> visibleCells = EyeDirection.getCellHashMap();
+
+        cellRay(mat, EyeDirection.UP, visibleCells.get(EyeDirection.UP), getRow() - 1, getCol() - 1);
+        cellRay(mat, EyeDirection.UP, visibleCells.get(EyeDirection.UP), getRow(), getCol() - 1);
+        cellRay(mat, EyeDirection.UP, visibleCells.get(EyeDirection.UP), getRow() + 1, getCol() - 1);
+
+        cellRay(mat, EyeDirection.DOWN, visibleCells.get(EyeDirection.DOWN), getRow() - 1, getCol() + 1);
+        cellRay(mat, EyeDirection.DOWN, visibleCells.get(EyeDirection.DOWN), getRow(), getCol() + 1);
+        cellRay(mat, EyeDirection.DOWN, visibleCells.get(EyeDirection.DOWN), getRow() + 1, getCol() + 1);
+
+        cellRay(mat, EyeDirection.LEFT, visibleCells.get(EyeDirection.LEFT), getRow() - 1, getCol() - 1);
+        cellRay(mat, EyeDirection.LEFT, visibleCells.get(EyeDirection.LEFT), getRow() - 1, getCol());
+        cellRay(mat, EyeDirection.LEFT, visibleCells.get(EyeDirection.LEFT), getRow() - 1, getCol() + 1);
+
+        cellRay(mat, EyeDirection.RIGHT, visibleCells.get(EyeDirection.RIGHT), getRow() + 1, getCol() - 1);
+        cellRay(mat, EyeDirection.RIGHT, visibleCells.get(EyeDirection.RIGHT), getRow() + 1, getCol());
+        cellRay(mat, EyeDirection.RIGHT, visibleCells.get(EyeDirection.RIGHT), getRow() + 1, getCol() + 1);
+
+        return visibleCells;
     }
 
-    public EyeDirection getFacing() {
-        return facing;
-    }
-
-    public ArrayList<Cell> getVisible(Cell[][] mat) {
-        ArrayList<Cell> visible = new ArrayList<>();
-
-        switch (facing) {
-            case UP -> {
-                cellRay(mat, visible, getRow() - 1, getCol() - 1);
-                cellRay(mat, visible, getRow(), getCol() - 1);
-                cellRay(mat, visible, getRow() + 1, getCol() - 1);
-            }
-            case DOWN -> {
-                cellRay(mat, visible, getRow() - 1, getCol() + 1);
-                cellRay(mat, visible, getRow(), getCol() + 1);
-                cellRay(mat, visible, getRow() + 1, getCol() + 1);
-            }
-            case LEFT -> {
-                cellRay(mat, visible, getRow() - 1, getCol() - 1);
-                cellRay(mat, visible, getRow() - 1, getCol());
-                cellRay(mat, visible, getRow() - 1, getCol() + 1);
-            }
-            case RIGHT -> {
-                cellRay(mat, visible, getRow() + 1, getCol() - 1);
-                cellRay(mat, visible, getRow() + 1, getCol());
-                cellRay(mat, visible, getRow() + 1, getCol() + 1);
-            }
-        }
-
-        return visible;
-    }
-
-    public boolean cellRay(Cell[][] mat, ArrayList<Cell> visible, int x, int y) {
+    public boolean cellRay(Cell[][] mat, EyeDirection facing, ArrayList<Cell> visible, int x, int y) {
         if (x < 0 || x >= mat.length || y < 0 || y >= mat.length) return false;
 
         switch (facing) {
@@ -87,29 +68,12 @@ public class EyeCell extends LivingCell {
     }
 
     @Override
-    public void onMove(MoveDirection moveDirection) {
-        if (moveDirection.isRotation())
-            facing = facing.rotate(moveDirection);
-    }
-
-    @Override
     public String toSpeciesString() {
         return "E";
     }
 
     @Override
-    public String getAttr(CellAttrs attr) {
-        if (attr == CellAttrs.FACING) return String.valueOf(facing);
-        return super.getAttr(attr);
-    }
-
-    @Override
     public String getName() {
         return "Eye";
-    }
-
-    @Override
-    public String getDescription() {
-        return Cells.EYE.getDescription();
     }
 }

@@ -60,6 +60,10 @@ public class CreatureViewerPanel extends JPanel implements ActionListener {
         cellUIPanel.setExamining(examining);
     }
 
+    public Creature getCreature() {
+        return creature;
+    }
+
     public boolean isCreatureValid() {
         return creatureValid;
     }

@@ -12,7 +12,7 @@ public class ChloroplastCell extends LivingCell {
     private int ticksToProduce;
 
     public ChloroplastCell(Creature owner, int relativeRow, int relativeCol) {
-        super(owner, Cells.CHLOROPLAST.get(), 15, 10, relativeRow, relativeCol);
+        super(owner, Cells.CHLOROPLAST, 15, 10, relativeRow, relativeCol);
         ticksToProduce = 0;
     }
 
@@ -39,10 +39,5 @@ public class ChloroplastCell extends LivingCell {
     @Override
     public String getName() {
         return "Chloroplast";
-    }
-
-    @Override
-    public String getDescription() {
-        return Cells.CHLOROPLAST.getDescription();
     }
 }

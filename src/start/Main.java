@@ -9,7 +9,7 @@ public class Main extends JFrame {
         try {UIManager.setLookAndFeel("com.sun.java.swing.plaf.motif.MotifLookAndFeel");}
         catch (Exception ignored) {}
 
-        Grid grid = new Grid(75);
+        Grid grid = new Grid(100);
         Grid creatureView = new Grid(9);
         BaseFrame baseFrame = new BaseFrame("cell game", grid, creatureView);
         javax.swing.SwingUtilities.invokeLater(baseFrame::createAndShowGUI);

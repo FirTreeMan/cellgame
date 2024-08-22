@@ -2,6 +2,7 @@ package creature.cell;
 
 import grid.Grid;
 import util.CellAttrs;
+import util.Cells;
 
 import java.awt.*;
 
@@ -10,8 +11,8 @@ public abstract class FoodCell extends Cell implements EdibleCell {
     private final boolean isMeat;
     private boolean alive;
 
-    public FoodCell(Color color, int foodValue, boolean isMeat) {
-        super(null, color);
+    public FoodCell(Cells cellEnum, int foodValue, boolean isMeat) {
+        super(null, cellEnum);
         this.foodValue = foodValue;
         this.isMeat = isMeat;
         this.alive = true;

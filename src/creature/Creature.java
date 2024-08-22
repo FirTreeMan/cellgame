@@ -1,9 +1,6 @@
 package creature;
 
-import creature.cell.Cell;
-import creature.cell.FoodCell;
-import creature.cell.LivingCell;
-import creature.cell.CellFactory;
+import creature.cell.*;
 import creature.cell.cells.foodcells.EggCell;
 import creature.cell.cells.livingcells.BrainCell;
 import creature.cell.cells.livingcells.EyeCell;
@@ -115,7 +112,7 @@ public class Creature {
     }
 
     public static Creature defaultCreature(LivingCell[] cells, Random random) {
-        return new Creature(cells, random, 100, 20, 200, 0.1F, 1, false);
+        return new Creature(cells, random, 100, 20, 400, 0.1F, 1, false);
     }
 
     public Creature copyTo(LivingCell[] cells) {
@@ -207,7 +204,7 @@ public class Creature {
     }
 
     private float mutate(float value, float mutationChance, int mutationSeverity, int scalar) {
-        return mutate((int) (value * scalar) + 1, mutationChance, mutationSeverity * scalar / 100, scalar) / (float) scalar;
+        return mutate((int) (value * scalar) + 1, mutationChance, mutationSeverity, scalar) / (float) scalar;
     }
 
     private int mutate(int value, float mutationChance, int mutationSeverity, int max) {
@@ -318,20 +315,24 @@ public class Creature {
 
         Cell[][] mat = grid.getCellMatrix();
         HashMap<EyeDirection, ArrayList<Cell>> visibleCells = EyeDirection.getCellHashMap();
-        for (EyeCell eye: eyes)
-            visibleCells.get(eye.getFacing()).addAll(eye.getVisible(mat));
+        for (EyeCell eye: eyes) {
+            HashMap<EyeDirection, ArrayList<Cell>> eyeVisible = eye.getVisible(mat);
+            for (EyeDirection eyeDirection: visibleCells.keySet())
+                visibleCells.get(eyeDirection).addAll(eyeVisible.get(eyeDirection));
+        }
 
         brain.makeDecision(visibleCells, facing, canReproduce(), getEnergyAfterReproduction(), true);
         MoveDirection decision = brain.getDecision();
-        if (!canMakeMove(mat, decision))
+        if (!canMakeMove(grid, decision))
             decision = MoveDirection.NEUTRAL;
         makeMove(grid, decision);
     }
 
-    public boolean canMakeMove(Cell[][] mat, MoveDirection moveDirection) {
+    public boolean canMakeMove(Grid grid, MoveDirection moveDirection) {
         if (moveDirection == MoveDirection.NEUTRAL || moveDirection == MoveDirection.REPRODUCE)
             return true;
 
+        Cell[][] mat = grid.getCellMatrix();
         for (LivingCell cell: cells) {
             int newCellX;
             int newCellY;
@@ -356,7 +357,10 @@ public class Creature {
                 }
             }
 
-            if (mat[newCellX][newCellY] == null || mat[newCellX][newCellY] instanceof LivingCell otherCell && otherCell.getOwner() == this)
+            if (grid.inBounds(newCellX, newCellY) &&
+                    (mat[newCellX][newCellY] == null ||
+                    mat[newCellX][newCellY] instanceof FoodCell ||
+                    mat[newCellX][newCellY] instanceof LivingCell otherCell && otherCell.getOwner() == this))
                 continue;
             return false;
         }
@@ -396,8 +400,7 @@ public class Creature {
         }
 
         for (LivingCell cell: cells) {
-            mat[cell.getRow()][cell.getCol()] = null;
-            grid.queueUpdate(cell.getRow(), cell.getCol());
+            cell.removeSelfFromGrid(grid);
         }
 
         for (LivingCell cell: cells) {
@@ -419,9 +422,10 @@ public class Creature {
                 }
             }
 
-            mat[newCellX][newCellY] = cell;
+            if (mat[newCellX][newCellY] instanceof FoodCell foodCell)
+                grid.removeFood(foodCell);
             cell.setCoords(newCellX, newCellY);
-            grid.queueUpdate(cell.getRow(), cell.getCol());
+            cell.addSelfToGrid(grid);
 
             cell.onMove(moveDirection);
         }
@@ -429,7 +433,7 @@ public class Creature {
 
     public void tick(Cell[][] mat) {
         for (LivingCell cell: cells) {
-            energy -= cell.getCost(maxMoveCooldown >= 0 && moveCooldown == maxMoveCooldown);
+            energy -= cell.getCost(moveCooldown == maxMoveCooldown && brain.getDecision().isMotion());
             cell.tick(mat);
         }
 
@@ -438,13 +442,18 @@ public class Creature {
             die();
     }
 
-    public void eat(FoodCell cell) {
+    public void eat(EdibleCell cell) {
         energy += cell.getFoodValue();
         cell.kill();
     }
 
     public void reproduce(Grid grid, int targetRow, int targetCol) {
         Creature child = makeChild();
+        child.setSpatial(targetRow, targetCol);
+        for (LivingCell cell: child.getCells())
+            if (!grid.inBounds(cell.getRow(), cell.getCol()))
+                return;
+
         grid.addFood(new EggCell(child), targetRow, targetCol);
         energy -= reproductionEnergy;
         births++;
@@ -479,15 +488,12 @@ public class Creature {
     public String toString() {
         StringBuilder builder = new StringBuilder();
 
-        builder.append(brain.toSpeciesString());
-        builder.append('-');
-
         for (LivingCell cell: cells)
-            if (!(cell instanceof BrainCell)) {
-                builder.append(cell.toSpeciesString());
-                builder.append(brain.getCharFromValue(cell.getRelativeX()));
-                builder.append(brain.getCharFromValue(cell.getRelativeY()));
-            }
+            if (!(cell instanceof BrainCell))
+                builder.append(brain.getCharFromValue(cell.toSpeciesString().charAt(0) * cell.getRelativeX() * 12 | cell.getRelativeY()));
+
+        builder.append('-');
+        builder.append(brain.toSpeciesString());
 
         return builder.toString();
     }

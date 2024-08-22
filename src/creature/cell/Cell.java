@@ -3,20 +3,21 @@ package creature.cell;
 import creature.Creature;
 import grid.Grid;
 import util.CellAttrs;
+import util.Cells;
 
 import java.awt.*;
 
 public abstract class Cell {
     private final Creature owner;
-    private final Color color;
+    private final Cells cellEnum;
 
     private int row;
     private int col;
     private boolean setCoords;
 
-    public Cell(Creature owner, Color color) {
+    public Cell(Creature owner, Cells cellEnum) {
         this.owner = owner;
-        this.color = color;
+        this.cellEnum = cellEnum;
 
         this.setCoords = false;
     }
@@ -30,7 +31,7 @@ public abstract class Cell {
 
     public void addSelfToGrid(Grid grid) {
         Cell[][] mat = grid.getCellMatrix();
-        checkCoords(mat, null);
+        checkCoords(mat);
         mat[row][col] = this;
         grid.queueUpdate(row, col);
     }
@@ -43,9 +44,13 @@ public abstract class Cell {
     }
 
     private void checkCoords(Cell[][] mat, Cell expected) {
-        if (!setCoords) throw new NullPointerException("Cell coords not set");
+        checkCoords(mat);
         if (mat[row][col] != expected)
             throw new NullPointerException(String.format("Unexpected cell at coords (%d,%d): %s instead of %s", row, col, mat[row][col], expected));
+    }
+
+    private void checkCoords(Cell[][] mat) {
+        if (!setCoords) throw new NullPointerException("Cell coords not set");
     }
 
     public void setCoords(int row, int col) {
@@ -58,8 +63,12 @@ public abstract class Cell {
         return owner;
     }
 
+    public Cells getCellEnum() {
+        return cellEnum;
+    }
+
     public Color getColor() {
-        return color;
+        return cellEnum.get();
     }
 
     public int getRow() {
@@ -76,14 +85,16 @@ public abstract class Cell {
         return "N/A";
     }
 
+    public String getDescription() {
+        return cellEnum.getDescription();
+    }
+
     @Override
     public String toString() {
         return getName() + String.format("(%d,%d)", getRow(), getCol());
     }
 
     public abstract String getName();
-
-    public abstract String getDescription();
 
     public void tick() {}
 }

@@ -1,6 +1,8 @@
 package swing.cellui;
 
+import creature.Creature;
 import creature.cell.Cell;
+import creature.cell.cells.livingcells.BrainCell;
 import grid.Grid;
 
 import javax.swing.*;
@@ -11,11 +13,8 @@ import java.util.List;
 public class CellUIPanel extends JPanel {
     private final Grid grid;
     private final CellUI[] cellUIs;
+    private CellUI selected;
     private boolean examining;
-
-    public CellUIPanel(Grid grid, int cellSize) {
-        this(null, grid, cellSize);
-    }
 
     public CellUIPanel(ActionListener listener, Grid grid, int cellSize) {
         this.grid = grid;
@@ -40,6 +39,13 @@ public class CellUIPanel extends JPanel {
             }
     }
 
+    public void setCellSize(int cellSize) {
+        for (CellUI cellUI: cellUIs)
+            cellUI.setCellSize(cellSize);
+        revalidate();
+        repaint();
+    }
+
     public void setExamining(boolean examining) {
         this.examining = examining;
     }
@@ -60,10 +66,30 @@ public class CellUIPanel extends JPanel {
         return examining;
     }
 
-    public void refresh() {
+    public void refreshCell(CellUI cellUI) {
         Cell[][] cellMatrix = grid.getCellMatrix();
+        cellUI.setCell(cellMatrix[cellUI.getRow()][cellUI.getCol()], cellMatrix);
+    }
+
+    public void refresh(Creature selectedCreature) {
+        Cell[][] cellMatrix = grid.getCellMatrix();
+
         for (List<Integer> coord: grid.getToUpdate())
-            cellUIs[coord.get(0) * cellMatrix.length + coord.get(1)].setCell(cellMatrix[coord.get(0)][coord.get(1)], cellMatrix);
+            refreshCell(cellUIs[coord.get(0) * cellMatrix.length + coord.get(1)]);
         grid.getToUpdate().clear();
+
+        if (selected != null) {
+            refreshCell(selected);
+            selected = null;
+        }
+        if (selectedCreature != null)
+            setSelected(selectedCreature);
+    }
+
+    public void setSelected(Creature creature) {
+        Cell[][] cellMatrix = grid.getCellMatrix();
+        BrainCell brain = creature.getBrain();
+        selected = cellUIs[brain.getRow() * cellMatrix.length + brain.getCol()];
+        selected.setBackground(Grid.SELECTED_COLOR);
     }
 }

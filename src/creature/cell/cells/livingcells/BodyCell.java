@@ -6,7 +6,7 @@ import util.Cells;
 
 public class BodyCell extends LivingCell {
     public BodyCell(Creature owner, int relativeRow, int relativeCol) {
-        super(owner, Cells.BODY.get(), 5, 5, relativeRow, relativeCol);
+        super(owner, Cells.BODY, 2, 0, relativeRow, relativeCol);
     }
 
     @Override
@@ -17,10 +17,5 @@ public class BodyCell extends LivingCell {
     @Override
     public String getName() {
         return "Body";
-    }
-
-    @Override
-    public String getDescription() {
-        return Cells.BODY.getDescription();
     }
 }

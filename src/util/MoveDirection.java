@@ -10,6 +10,14 @@ public enum MoveDirection {
     COUNTERCLOCKWISE,
     REPRODUCE;
 
+    public boolean isMotion() {
+        return this.isOrthogonal() || this.isRotation();
+    }
+
+    public boolean isOrthogonal() {
+        return this == UP || this == DOWN || this == LEFT || this == RIGHT;
+    }
+
     public boolean isRotation() {
         return this == CLOCKWISE || this == COUNTERCLOCKWISE;
     }
