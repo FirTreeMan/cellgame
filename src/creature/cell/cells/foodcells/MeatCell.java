@@ -11,7 +11,7 @@ public class MeatCell extends FoodCell {
     }
 
     public MeatCell(int foodValue) {
-        super(Cells.MEAT, foodValue + 100, true);
+        super(Cells.MEAT, foodValue + 100, 40, true);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package creature.cell;
 
 import creature.Creature;
+import grid.Grid;
 import util.Cells;
 import util.MoveDirection;
 
@@ -38,6 +39,10 @@ public abstract class LivingCell extends Cell {
         return tickCost;
     }
 
+    public Cell[] getBorderingCells(Grid grid) {
+        return getBorderingCells(grid.getCellMatrix());
+    }
+
     public Cell[] getBorderingCells(Cell[][] mat) {
         Cell[] nearby = new Cell[4];
         if (getRow() > 0)
@@ -54,7 +59,7 @@ public abstract class LivingCell extends Cell {
 
     public void onMove(MoveDirection moveDirection) {}
 
-    public void tick(Cell[][] mat) {}
+    public void tick(Grid grid) {}
 
     public abstract String toSpeciesString();
 }

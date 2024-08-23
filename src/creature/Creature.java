@@ -2,9 +2,11 @@ package creature;
 
 import creature.cell.*;
 import creature.cell.cells.foodcells.EggCell;
+import creature.cell.cells.foodcells.TrapCell;
 import creature.cell.cells.livingcells.BrainCell;
 import creature.cell.cells.livingcells.EyeCell;
 import creature.cell.cells.livingcells.LegCell;
+import creature.cell.cells.livingcells.SpinnerCell;
 import grid.Grid;
 import util.BodyMutation;
 import util.EyeDirection;
@@ -435,10 +437,10 @@ public class Creature {
         }
     }
 
-    public void tick(Cell[][] mat) {
+    public void tick(Grid grid) {
         for (LivingCell cell: cells) {
             energy -= cell.getCost(moveCooldown == maxMoveCooldown && brain.getDecision().isMotion());
-            cell.tick(mat);
+            cell.tick(grid);
         }
 
         age++;
@@ -446,10 +448,16 @@ public class Creature {
             die();
     }
 
+    public void slowDown(int ticksToSlow) {
+        moveCooldown += ticksToSlow;
+    }
+
     public void eat(EdibleCell cell) {
         if (!cell.isAlive()) return;
+
         energy += cell.getFoodValue();
         cell.kill();
+        cell.onEaten(this);
     }
 
     public void reproduce(Grid grid, int targetRow, int targetCol) {
@@ -462,6 +470,10 @@ public class Creature {
         grid.addFood(new EggCell(child, reproductionEnergy - 5), targetRow, targetCol);
         energy -= reproductionEnergy;
         births++;
+    }
+
+    public void useEnergy(int energyToUse) {
+        energy -= energyToUse;
     }
 
     public void hurt(Creature creature) {

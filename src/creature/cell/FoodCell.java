@@ -1,21 +1,37 @@
 package creature.cell;
 
+import creature.Creature;
 import grid.Grid;
 import util.CellAttrs;
 import util.Cells;
 
-import java.awt.*;
-
 public abstract class FoodCell extends Cell implements EdibleCell {
     private final int foodValue;
+    private final int rotTime;
     private final boolean isMeat;
-    private boolean alive;
 
-    public FoodCell(Cells cellEnum, int foodValue, boolean isMeat) {
+    private int timeLived;
+    private boolean alive;
+    private boolean shouldMakeRot;
+
+    public FoodCell(Cells cellEnum, int foodValue, int rotTime, boolean isMeat) {
         super(null, cellEnum);
         this.foodValue = foodValue;
+        this.rotTime = rotTime;
         this.isMeat = isMeat;
+
+        this.timeLived = 0;
         this.alive = true;
+        this.shouldMakeRot = false;
+    }
+
+    public boolean shouldMakeRot() {
+        return shouldMakeRot;
+    }
+
+    public void rot(boolean shouldMakeRot) {
+        this.shouldMakeRot = shouldMakeRot;
+        alive = false;
     }
 
     @Override
@@ -36,6 +52,20 @@ public abstract class FoodCell extends Cell implements EdibleCell {
 
     @Override
     public void kill() {
-        alive = false;
+        rot(false);
+    }
+
+    @Override
+    public void onEaten(Creature creature) {
+
+    }
+
+    @Override
+    public void tick() {
+        if (rotTime < 0) return;
+
+        if (timeLived >= rotTime)
+            rot(true);
+        timeLived++;
     }
 }

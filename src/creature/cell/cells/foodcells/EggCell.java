@@ -18,7 +18,7 @@ public class EggCell extends FoodCell implements HatchableCell {
     }
 
     public EggCell(Creature creature, int foodValue) {
-        super(Cells.EGG, foodValue, true);
+        super(Cells.EGG, foodValue, creature.getCellCount() * 2, true);
 
         this.creature = creature;
         this.incubationTicks = creature.getCellCount();
@@ -33,6 +33,7 @@ public class EggCell extends FoodCell implements HatchableCell {
     @Override
     public void tick() {
         ticksPassed++;
+        super.tick();
     }
 
     @Override

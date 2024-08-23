@@ -1,16 +1,14 @@
 package creature.cell;
 
 import creature.Creature;
-import creature.cell.cells.foodcells.GlucoseCell;
-import creature.cell.cells.foodcells.MeatCell;
-import creature.cell.cells.foodcells.PlantCell;
+import creature.cell.cells.foodcells.*;
 import creature.cell.cells.livingcells.*;
 import util.Cells;
 
 import java.util.Random;
 
 public class CellFactory {
-    public static int CELL_MUTATION_CANDIDATE_COUNT = 6;
+    public static int CELL_MUTATION_CANDIDATE_COUNT = 8;
 
     public static Cell generateTempCell(Cells cellEnum) {
         return switch (cellEnum) {
@@ -20,6 +18,10 @@ public class CellFactory {
             case DAMAGER -> new DamagerCell(null, 0, 0);
             case CHLOROPLAST -> new ChloroplastCell(null, 0, 0);
             case EYE -> new EyeCell(null, 0, 0);
+            case CHITIN -> new ChitinCell(null, 0, 0);
+            case SHARER -> new SharerCell(null, 0, 0);
+            case SPINNER -> new SpinnerCell(null, 0, 0);
+            case BOMBER -> new BomberCell(null, 0, 0);
             case BRAIN -> BrainCell.defaultBrain(null);
             case NULL -> null;
 
@@ -27,6 +29,10 @@ public class CellFactory {
             case MEAT -> new MeatCell();
             case GLUCOSE -> new GlucoseCell();
             case EGG -> null;
+            case ROT -> new RotCell();
+            case OFFERING -> new OfferingCell();
+            case TRAP -> new TrapCell();
+            case BOMB -> new BombCell();
         };
     }
 
@@ -42,6 +48,8 @@ public class CellFactory {
             case DamagerCell ignored -> new DamagerCell(owner, relativeX, relativeY);
             case ChloroplastCell ignored -> new ChloroplastCell(owner, relativeX, relativeY);
             case EyeCell ignored -> new EyeCell(owner, relativeX, relativeY);
+            case ChitinCell ignored -> new ChitinCell(owner, relativeX, relativeY);
+            case SharerCell ignored -> new SharerCell(owner, relativeX, relativeY);
             case BrainCell brainCell -> brainCell.copyToChild(owner);
 
             default -> new NullCell(owner, relativeX, relativeY);
@@ -59,6 +67,8 @@ public class CellFactory {
             case 3 -> new DamagerCell(owner, relativeX, relativeY);
             case 4 -> new ChloroplastCell(owner, relativeX, relativeY);
             case 5 -> new EyeCell(owner, relativeX, relativeY);
+            case 6 -> new ChitinCell(owner, relativeX, relativeY);
+            case 7 -> new SharerCell(owner, relativeX, relativeY);
 
             default -> new NullCell(owner, relativeX, relativeY);
         };

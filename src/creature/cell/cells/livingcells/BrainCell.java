@@ -3,6 +3,7 @@ package creature.cell.cells.livingcells;
 import creature.Creature;
 import creature.cell.Cell;
 import creature.cell.LivingCell;
+import grid.Grid;
 import util.Cells;
 import util.MoveDirection;
 import util.EyeDirection;
@@ -20,13 +21,18 @@ public class BrainCell extends LivingCell {
             Map.entry(Cells.DAMAGER, -0.1F),
             Map.entry(Cells.CHLOROPLAST, 0.0F),
             Map.entry(Cells.EYE, 0.0F),
+            Map.entry(Cells.CHITIN, 0.0F),
+            Map.entry(Cells.SHARER, 0.0F),
+            Map.entry(Cells.SPINNER, 0.0F),
+            Map.entry(Cells.BOMBER, 0.0F),
             Map.entry(Cells.BRAIN, 0.0F),
             Map.entry(Cells.NULL, 0.0F),
 
             Map.entry(Cells.PLANT, 0.05F),
             Map.entry(Cells.MEAT, 0.06F),
             Map.entry(Cells.GLUCOSE, 0.05F),
-            Map.entry(Cells.EGG, -0.025F)
+            Map.entry(Cells.EGG, -0.025F),
+            Map.entry(Cells.ROT, 0.0F)
     );
     public static Map<EyeDirection, Float> DEFAULT_FACING_WEIGHTS = Map.ofEntries(
             Map.entry(EyeDirection.UP, 0.0F),
@@ -187,7 +193,7 @@ public class BrainCell extends LivingCell {
         float eyeWeight = 0.0F;
 
         for (Cell cell: visibleCells) {
-            int taxicabDistance = Math.abs(cell.getRow() - getRow() + cell.getCol() - getCol());
+            int taxicabDistance = Grid.taxicabDistance(this, cell);
             taxicabDistance = Math.clamp(taxicabDistance, sightDistanceBeforeFalloff, maxSightDistance);
             float weightDistanceScalar = 1.0F - (float) (taxicabDistance - sightDistanceBeforeFalloff) / (maxSightDistance - sightDistanceBeforeFalloff);
             eyeWeight += cellWeights.get(cell.getCellEnum()) * weightDistanceScalar;

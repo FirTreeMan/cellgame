@@ -4,25 +4,33 @@ import creature.Creature;
 import creature.cell.Cell;
 import creature.cell.LivingCell;
 import creature.cell.cells.foodcells.GlucoseCell;
+import creature.cell.cells.foodcells.RotCell;
+import grid.Grid;
 import util.CellAttrs;
 import util.Cells;
 
 public class ChloroplastCell extends LivingCell {
-    public static int PRODUCTION_TICKS = 1;
+    public static int PRODUCTION_TICKS = 2;
     private int ticksToProduce;
 
     public ChloroplastCell(Creature owner, int relativeRow, int relativeCol) {
         super(owner, Cells.CHLOROPLAST, 15, 10, relativeRow, relativeCol);
-        ticksToProduce = 0;
+        this.ticksToProduce = 0;
     }
 
     @Override
-    public void tick(Cell[][] mat) {
+    public void tick(Grid grid) {
         ticksToProduce++;
         if (ticksToProduce >= PRODUCTION_TICKS) {
             ticksToProduce = 0;
             getOwner().eat(new GlucoseCell());
         }
+
+        for (Cell cell: getBorderingCells(grid))
+            if (cell instanceof RotCell rotCell) {
+                rotCell.kill();
+                getOwner().eat(new GlucoseCell());
+            }
     }
 
     @Override

@@ -5,6 +5,7 @@ import creature.cell.Cell;
 import creature.cell.EdibleCell;
 import creature.cell.FoodCell;
 import creature.cell.LivingCell;
+import grid.Grid;
 import util.Cells;
 
 public class MouthCell extends LivingCell {
@@ -13,8 +14,8 @@ public class MouthCell extends LivingCell {
     }
 
     @Override
-    public void tick(Cell[][] mat) {
-        for (Cell cell: getBorderingCells(mat))
+    public void tick(Grid grid) {
+        for (Cell cell: getBorderingCells(grid))
             if (cell instanceof EdibleCell edibleCell && edibleCell.isAlive() && cell.getOwner() != getOwner())
                 getOwner().eat(edibleCell);
     }

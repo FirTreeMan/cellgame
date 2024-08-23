@@ -27,7 +27,16 @@ public enum Cells {
             "its weight causes it to consume more energy<br>" +
             "than it produces while moving."),
     EYE(new Color(207, 31, 154),
-            "Allows a creature to view its surroundings"),
+            "Allows a creature to view its surroundings."),
+    CHITIN(new Color(237, 131, 2),
+            "Protects against Damagers.<br>" +
+                    "Uses a bit of energy."),
+    SHARER(new Color(230, 151, 145),
+            "Gives extra energy to other Sharers."),
+    SPINNER(new Color(133, 197, 214),
+            "Leaves behind a paralyzing agent."),
+    BOMBER(new Color(232, 86, 122),
+            "Leaves behind an explosive agent."),
     BRAIN(new Color(252, 205, 35),
             "The most important cell.<br>" +
             "Controls behavior.<br>" +
@@ -37,7 +46,11 @@ public enum Cells {
     PLANT(new Color(50, 168, 82), "Appears everywhere."),
     MEAT(new Color(168, 50, 50), "Yielded from a creature's death."),
     GLUCOSE(new Color(43, 194, 119), "Produced by Chloroplasts."),
-    EGG(new Color(237, 198, 26), "Hatches into a new creature after some time.<br>Very tasty.")
+    EGG(new Color(237, 198, 26), "Hatches into a new creature after some time.<br>Very tasty."),
+    ROT(new Color(145, 82, 54), "Dead biomass.<br>More useful to Chloroplasts."),
+    OFFERING(new Color(121, 112, 179), "An offering from one creature to another."),
+    TRAP(new Color(190, 221, 230), "Slows creatures."),
+    BOMB(new Color(255, 94, 0), "Explodes creatures."),
     ;
 
     public static final Map<Color, Cells> REVERSE =

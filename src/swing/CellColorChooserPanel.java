@@ -208,7 +208,7 @@ class SwatchPanel extends JPanel {
 
     protected void initValues() {
         swatchSize = new Dimension(30, 30);
-        numSwatches = new Dimension(4, 2);
+        numSwatches = new Dimension(4, 3);
         gap = new Dimension(1, 1);
     }
 
