@@ -7,7 +7,11 @@ import java.awt.*;
 
 public class MeatCell extends FoodCell {
     public MeatCell() {
-        super(Cells.MEAT, 500, true);
+        this(500);
+    }
+
+    public MeatCell(int foodValue) {
+        super(Cells.MEAT, foodValue + 100, true);
     }
 
     @Override

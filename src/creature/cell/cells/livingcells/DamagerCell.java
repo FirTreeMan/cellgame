@@ -8,7 +8,7 @@ import util.Cells;
 
 public class DamagerCell extends LivingCell {
     public DamagerCell(Creature owner, int relativeRow, int relativeCol) {
-        super(owner, Cells.DAMAGER, 10, 10, relativeRow, relativeCol);
+        super(owner, Cells.DAMAGER, 10, 5, relativeRow, relativeCol);
     }
 
     @Override

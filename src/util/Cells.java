@@ -16,10 +16,11 @@ public enum Cells {
             "Allows a creature to eat food.<br>" +
             "Quite important."),
     LEG(new Color(123, 66, 245),
-            "Each is capable of moving a handful of cells.<br>" +
-            "A shortage of Legs causes motion to be slower."),
+            "Capable of moving a handful of cells.<br>" +
+            "A shortage of Legs causes movement to occur slower."),
     DAMAGER(new Color(209, 69, 69),
-            "Hurts everything it touches."),
+            "Hurts everything it touches.<br> " +
+            "Also functions as a Mouth."),
     CHLOROPLAST(new Color(43, 194, 156),
             "Produces Glucose for the creature at regular intervals.<br>" +
             "Although useful for stationary creatures,<br>" +

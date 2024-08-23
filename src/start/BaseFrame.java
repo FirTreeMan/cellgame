@@ -250,6 +250,7 @@ public class BaseFrame extends JFrame {
         JPanel entityListPanel = new JPanel(new GridLayout(0, 1));
 
         JScrollPane creatureScrollPane = getScrollableListPanel(new JList<>(grid.getCreatures()), "Creatures", s -> {
+            if (s == null) return;
             creatureViewerPanel.loadCreature(s);
             refreshGridUI();
         });
@@ -268,8 +269,8 @@ public class BaseFrame extends JFrame {
 
         ActionListener tickListener = e -> {
             grid.tick();
+            creatureViewerPanel.checkCreature();
             refreshGridUI();
-            creatureViewerPanel.updateBodyParams();
         };
 
         Timer tickTimer = new Timer(1000 / 30, tickListener);

@@ -9,7 +9,7 @@ import util.Cells;
 
 public class MouthCell extends LivingCell {
     public MouthCell(Creature owner, int relativeRow, int relativeCol) {
-        super(owner, Cells.MOUTH, 5, 5, relativeRow, relativeCol);
+        super(owner, Cells.MOUTH, 5, 0, relativeRow, relativeCol);
     }
 
     @Override

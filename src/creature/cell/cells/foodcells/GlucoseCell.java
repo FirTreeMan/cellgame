@@ -7,7 +7,7 @@ import java.awt.*;
 
 public class GlucoseCell extends FoodCell {
     public GlucoseCell() {
-        super(Cells.GLUCOSE, 40, false);
+        super(Cells.GLUCOSE, 20, false);
     }
 
     @Override

@@ -143,6 +143,10 @@ public class Creature {
         return brain;
     }
 
+    public int getEnergy() {
+        return energy;
+    }
+
     public boolean isAlive() {
         return alive;
     }
@@ -443,6 +447,7 @@ public class Creature {
     }
 
     public void eat(EdibleCell cell) {
+        if (!cell.isAlive()) return;
         energy += cell.getFoodValue();
         cell.kill();
     }
@@ -454,7 +459,7 @@ public class Creature {
             if (!grid.inBounds(cell.getRow(), cell.getCol()))
                 return;
 
-        grid.addFood(new EggCell(child), targetRow, targetCol);
+        grid.addFood(new EggCell(child, reproductionEnergy - 5), targetRow, targetCol);
         energy -= reproductionEnergy;
         births++;
     }

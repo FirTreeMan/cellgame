@@ -11,6 +11,8 @@ import java.awt.event.ActionListener;
 import java.util.List;
 
 public class CellUIPanel extends JPanel {
+    public static int CELL_SIZE_TO_CHANGE_INSETS = 10;
+
     private final Grid grid;
     private final CellUI[] cellUIs;
     private CellUI selected;
@@ -24,6 +26,7 @@ public class CellUIPanel extends JPanel {
 
         setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets.set(1, 1, 1, 1);
 
         for (int r = 0; r < matrix.length; r++)
             for (int c = 0; c < matrix[0].length; c++) {
@@ -34,14 +37,22 @@ public class CellUIPanel extends JPanel {
 
                 gbc.gridx = r;
                 gbc.gridy = c;
-                gbc.insets.set(1, 1, 1, 1);
                 add(cellUI, gbc);
             }
     }
 
     public void setCellSize(int cellSize) {
-        for (CellUI cellUI: cellUIs)
+        GridBagConstraints gbc = new GridBagConstraints();
+        for (CellUI cellUI: cellUIs) {
+            if (cellSize > CELL_SIZE_TO_CHANGE_INSETS ^ cellUI.getCellSize() > CELL_SIZE_TO_CHANGE_INSETS) {
+                gbc.gridx = cellUI.getRow();
+                gbc.gridy = cellUI.getCol();
+
+                gbc.insets = cellSize > CELL_SIZE_TO_CHANGE_INSETS ? new Insets(1, 1, 1, 1) : new Insets(0, 0, 0, 0);
+                ((GridBagLayout) getLayout()).setConstraints(cellUI, gbc);
+            }
             cellUI.setCellSize(cellSize);
+        }
         revalidate();
         repaint();
     }

@@ -24,9 +24,9 @@ public class BrainCell extends LivingCell {
             Map.entry(Cells.NULL, 0.0F),
 
             Map.entry(Cells.PLANT, 0.05F),
-            Map.entry(Cells.MEAT, 0.1F),
+            Map.entry(Cells.MEAT, 0.06F),
             Map.entry(Cells.GLUCOSE, 0.05F),
-            Map.entry(Cells.EGG, 0.1F)
+            Map.entry(Cells.EGG, -0.025F)
     );
     public static Map<EyeDirection, Float> DEFAULT_FACING_WEIGHTS = Map.ofEntries(
             Map.entry(EyeDirection.UP, 0.0F),
@@ -39,7 +39,10 @@ public class BrainCell extends LivingCell {
             "facingDownWeight:",
             "facingLeftWeight:",
             "facingRightWeight:",
+            "sightDistanceBeforeFalloff:",
+            "maxSightDistance:",
             "eyeDirectionLeak:",
+            "eyeDirectionMemory:",
             "actionThreshold:",
             "clockwiseTurnThreshold:",
             "counterClockwiseTurnThreshold:",
@@ -51,7 +54,10 @@ public class BrainCell extends LivingCell {
     private final Map<EyeDirection, Float> facingWeights;
     private final HashMap<EyeDirection, Float> eyeDecisionMap;
     private final HashMap<EyeDirection, Float> leakMap;
+    private final int sightDistanceBeforeFalloff;
+    private final int maxSightDistance;
     private final float eyeDirectionLeak;
+    private final float eyeDecisionMemory;
     private final float actionThreshold;
     private final float clockwiseTurnThreshold;
     private final float counterClockwiseTurnThreshold;
@@ -63,18 +69,21 @@ public class BrainCell extends LivingCell {
     private MoveDirection decision;
     private EyeDirection eyeDecision;
 
-    public BrainCell(Creature owner, int relativeRow, int relativeCol, Map<Cells, Float> cellWeights, Map<EyeDirection, Float> facingWeights, float eyeDirectionLeak, float actionThreshold, float clockwiseTurnThreshold, float counterClockwiseTurnThreshold, float reproductionPriority, int reproductionEnergyRemainder) {
-        this(owner, relativeRow, relativeCol, cellWeights, facingWeights, eyeDirectionLeak, actionThreshold, clockwiseTurnThreshold, counterClockwiseTurnThreshold, reproductionPriority, reproductionEnergyRemainder, true);
+    public BrainCell(Creature owner, int relativeRow, int relativeCol, Map<Cells, Float> cellWeights, Map<EyeDirection, Float> facingWeights, int sightDistanceBeforeFalloff, int maxSightDistance, float eyeDirectionLeak, float eyeDecisionMemory, float actionThreshold, float clockwiseTurnThreshold, float counterClockwiseTurnThreshold, float reproductionPriority, int reproductionEnergyRemainder) {
+        this(owner, relativeRow, relativeCol, cellWeights, facingWeights, sightDistanceBeforeFalloff, maxSightDistance, eyeDirectionLeak, eyeDecisionMemory, actionThreshold, clockwiseTurnThreshold, counterClockwiseTurnThreshold, reproductionPriority, reproductionEnergyRemainder, true);
     }
 
-    public BrainCell(Creature owner, int relativeRow, int relativeCol, Map<Cells, Float> cellWeights, Map<EyeDirection, Float> facingWeights, float eyeDirectionLeak, float actionThreshold, float clockwiseTurnThreshold, float counterClockwiseTurnThreshold, float reproductionPriority, int reproductionEnergyRemainder, boolean doMutate) {
-        super(owner, Cells.BRAIN, 5, 0, relativeRow, relativeCol);
+    public BrainCell(Creature owner, int relativeRow, int relativeCol, Map<Cells, Float> cellWeights, Map<EyeDirection, Float> facingWeights, int sightDistanceBeforeFalloff, int maxSightDistance, float eyeDirectionLeak, float eyeDecisionMemory, float actionThreshold, float clockwiseTurnThreshold, float counterClockwiseTurnThreshold, float reproductionPriority, int reproductionEnergyRemainder, boolean doMutate) {
+        super(owner, Cells.BRAIN, 1, 0, relativeRow, relativeCol);
 
         if (doMutate) {
             this.cellWeights = mutateMap(cellWeights);
             this.facingWeights = mutateMap(facingWeights);
 
+            this.sightDistanceBeforeFalloff = getOwner().mutateCell(sightDistanceBeforeFalloff);
+            this.maxSightDistance = getOwner().mutateCell(maxSightDistance);
             this.eyeDirectionLeak = getOwner().mutateCell(eyeDirectionLeak);
+            this.eyeDecisionMemory = getOwner().mutateCell(eyeDecisionMemory);
             this.actionThreshold = getOwner().mutateCell(actionThreshold);
             this.clockwiseTurnThreshold = getOwner().mutateCell(clockwiseTurnThreshold);
             this.counterClockwiseTurnThreshold = getOwner().mutateCell(counterClockwiseTurnThreshold);
@@ -84,7 +93,10 @@ public class BrainCell extends LivingCell {
             this.cellWeights = cellWeights;
             this.facingWeights = facingWeights;
 
+            this.sightDistanceBeforeFalloff = sightDistanceBeforeFalloff;
+            this.maxSightDistance = maxSightDistance;
             this.eyeDirectionLeak = eyeDirectionLeak;
+            this.eyeDecisionMemory = eyeDecisionMemory;
             this.actionThreshold = actionThreshold;
             this.clockwiseTurnThreshold = clockwiseTurnThreshold;
             this.counterClockwiseTurnThreshold = counterClockwiseTurnThreshold;
@@ -100,7 +112,7 @@ public class BrainCell extends LivingCell {
     }
 
     public static BrainCell defaultBrain(Creature owner) {
-        return new BrainCell(owner, 0, 0, DEFAULT_CELL_WEIGHTS, DEFAULT_FACING_WEIGHTS, 0.02F, 0.01F, 0.04F, 0.04F, 0.2F, 300, false);
+        return new BrainCell(owner, 0, 0, DEFAULT_CELL_WEIGHTS, DEFAULT_FACING_WEIGHTS, 5, 70, 0.02F, 0.0F, 0.04F, 0.05F, 0.04F, 0.2F, 400, false);
     }
 
     public MoveDirection getDecision() {
@@ -142,11 +154,14 @@ public class BrainCell extends LivingCell {
 
     public void makeEyeDecision(HashMap<EyeDirection, ArrayList<Cell>> visibleCells) {
 //        System.out.println(visibleCells);
+        float residual = eyeDecisionMap.get(eyeDecision) * eyeDecisionMemory;
         eyeDecisionMap.replaceAll((d, v) -> 0.0F);
         leakMap.replaceAll((d, v) -> 0.0F);
 
         for (EyeDirection eyeDirection: EyeDirection.values()) {
             float eyeWeight = calcEyeWeight(visibleCells.get(eyeDirection).toArray(Cell[]::new));
+            if (eyeDirection == eyeDecision)
+                eyeWeight += residual;
 //            System.out.println(eyeWeight + " " + eyeDirection);
             if (eyeWeight > 0) {
                 eyeDecisionMap.put(eyeDirection, eyeWeight);
@@ -171,14 +186,18 @@ public class BrainCell extends LivingCell {
     public float calcEyeWeight(Cell[] visibleCells) {
         float eyeWeight = 0.0F;
 
-        for (Cell cell: visibleCells)
-            eyeWeight += cellWeights.get(cell.getCellEnum());
+        for (Cell cell: visibleCells) {
+            int taxicabDistance = Math.abs(cell.getRow() - getRow() + cell.getCol() - getCol());
+            taxicabDistance = Math.clamp(taxicabDistance, sightDistanceBeforeFalloff, maxSightDistance);
+            float weightDistanceScalar = 1.0F - (float) (taxicabDistance - sightDistanceBeforeFalloff) / (maxSightDistance - sightDistanceBeforeFalloff);
+            eyeWeight += cellWeights.get(cell.getCellEnum()) * weightDistanceScalar;
+        }
 
         return eyeWeight;
     }
 
     public BrainCell copyToChild(Creature newOwner) {
-        return new BrainCell(newOwner, getRelativeX(), getRelativeY(), cellWeights, facingWeights, eyeDirectionLeak, actionThreshold, clockwiseTurnThreshold, counterClockwiseTurnThreshold, reproductionPriority, reproductionEnergyRemainder);
+        return new BrainCell(newOwner, getRelativeX(), getRelativeY(), cellWeights, facingWeights, sightDistanceBeforeFalloff, maxSightDistance, eyeDirectionLeak, eyeDecisionMemory, actionThreshold, clockwiseTurnThreshold, counterClockwiseTurnThreshold, reproductionPriority, reproductionEnergyRemainder);
     }
 
     public String[] getParamValues() {
@@ -187,7 +206,10 @@ public class BrainCell extends LivingCell {
                 format(facingWeights.get(EyeDirection.DOWN)),
                 format(facingWeights.get(EyeDirection.LEFT)),
                 format(facingWeights.get(EyeDirection.RIGHT)),
+                format(facingWeights.get(EyeDirection.RIGHT)),
+                format(facingWeights.get(EyeDirection.RIGHT)),
                 format(eyeDirectionLeak),
+                format(eyeDecisionMemory),
                 format(actionThreshold),
                 format(clockwiseTurnThreshold),
                 format(counterClockwiseTurnThreshold),

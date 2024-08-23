@@ -132,6 +132,12 @@ public class CreatureViewerPanel extends JPanel implements ActionListener {
         updateBodyParams();
     }
 
+    public void checkCreature() {
+        if (creature == null || !creature.isAlive())
+            detachCreature();
+        else updateBodyParams();
+    }
+
     public void killCreature() {
         mainGrid.removeCreature(creature);
         detachCreature();

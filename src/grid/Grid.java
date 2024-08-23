@@ -85,7 +85,6 @@ public class Grid {
             if (oldCell instanceof LivingCell otherCreatureCell)
                 removeCreature(otherCreatureCell.getOwner());
             else if (oldCell instanceof FoodCell foodCell) {
-                creature.eat(foodCell);
                 removeFood(foodCell);
             }
             cell.addSelfToGrid(this);
@@ -125,7 +124,7 @@ public class Grid {
         for (LivingCell cell: creature.getCells()) {
             cell.removeSelfFromGrid(this);
 
-            MeatCell meatCell = new MeatCell();
+            MeatCell meatCell = new MeatCell(creature.getEnergy() / creature.getCellCount() / 2);
             meatCell.setCoords(cell.getRow(), cell.getCol());
             meatCell.addSelfToGrid(this);
             food.addElement(meatCell);
