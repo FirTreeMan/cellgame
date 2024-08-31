@@ -2,11 +2,9 @@ package creature;
 
 import creature.cell.*;
 import creature.cell.cells.foodcells.EggCell;
-import creature.cell.cells.foodcells.TrapCell;
 import creature.cell.cells.livingcells.BrainCell;
 import creature.cell.cells.livingcells.EyeCell;
 import creature.cell.cells.livingcells.LegCell;
-import creature.cell.cells.livingcells.SpinnerCell;
 import grid.Grid;
 import util.BodyMutation;
 import util.EyeDirection;
@@ -383,7 +381,7 @@ public class Creature {
             int freeSpaces = 0;
             for (int r = brain.getRow() - EGG_THROW_RANGE; r < brain.getRow() + EGG_THROW_RANGE + 1; r++)
                 for (int c = brain.getCol() - EGG_THROW_RANGE; c < brain.getCol() + EGG_THROW_RANGE + 1; c++)
-                    if (Grid.isEmptyAtCell(mat, r, c)) {
+                    if (grid.isEmptyAtCell(r, c)) {
                         freeSpaces++;
                     }
 
@@ -391,7 +389,7 @@ public class Creature {
             int passedSpaces = 0;
             for (int r = brain.getRow() - EGG_THROW_RANGE; r < brain.getRow() + EGG_THROW_RANGE + 1; r++)
                 for (int c = brain.getCol() - EGG_THROW_RANGE; c < brain.getCol() + EGG_THROW_RANGE + 1; c++)
-                    if (Grid.isEmptyAtCell(mat, r, c)) {
+                    if (grid.isEmptyAtCell(r, c)) {
                         if (targetSpace == passedSpaces) {
                             reproduce(grid, r, c);
                             return;
@@ -472,8 +470,11 @@ public class Creature {
         births++;
     }
 
-    public void useEnergy(int energyToUse) {
+    public boolean useEnergy(int energyToUse) {
+        if (energyToUse > energy)
+            return false;
         energy -= energyToUse;
+        return true;
     }
 
     public void hurt(Creature creature) {

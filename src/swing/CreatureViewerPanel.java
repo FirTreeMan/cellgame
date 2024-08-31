@@ -29,6 +29,7 @@ public class CreatureViewerPanel extends JPanel implements ActionListener {
     private CellUIPanel cellUIPanel;
     private CellColorChooserPanel cellColorChooserPanel;
     private JLabel validationLabel;
+    private JComboBox<BrainCell.BrainTypes> brainTypeChooser;
 
     private Creature creature;
     private boolean creatureValid;
@@ -54,6 +55,10 @@ public class CreatureViewerPanel extends JPanel implements ActionListener {
 
     public void setValidationLabel(JLabel validationLabel) {
         this.validationLabel = validationLabel;
+    }
+
+    public void setBrainTypeChooser(JComboBox<BrainCell.BrainTypes> brainTypeChooser) {
+        this.brainTypeChooser = brainTypeChooser;
     }
 
     public void setExamining(boolean examining) {
@@ -189,7 +194,8 @@ public class CreatureViewerPanel extends JPanel implements ActionListener {
         int brainRow = 0;
         int brainCol = 0;
         for (CellUI cellUI: cellUIPanel.getCellUIs())
-            if (cellUI.getCell() instanceof BrainCell brainCell) {
+            if (cellUI.getCell() instanceof BrainCell) {
+                BrainCell brainCell = BrainCell.defaultBrain(null, brainTypeChooser.getItemAt(brainTypeChooser.getSelectedIndex()));
                 brainRow = cellUI.getRow();
                 brainCol = cellUI.getCol();
                 cells.add(brainCell);

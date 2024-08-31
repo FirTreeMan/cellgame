@@ -187,11 +187,19 @@ public class BaseFrame extends JFrame {
         CellUIPanel creatureViewerGrid = new CellUIPanel(creatureViewerPanel, creatureView, 35);
         creatureViewerPanel.setCellUIPanel(creatureViewerGrid);
 
+        JPanel creatureCellAndBrainChooser = new JPanel();
+
         JColorChooser colorChooser = new JColorChooser();
         CellColorChooserPanel swatchChooserPanel = new CellColorChooserPanel();
         colorChooser.setChooserPanels(new AbstractColorChooserPanel[]{swatchChooserPanel});
         colorChooser.setPreviewPanel(new JPanel());
         creatureViewerPanel.setCellColorChooserPanel(swatchChooserPanel);
+
+        JComboBox<BrainCell.BrainTypes> brainTypeChooser = new JComboBox<>(BrainCell.BrainTypes.values());
+        creatureViewerPanel.setBrainTypeChooser(brainTypeChooser);
+
+        creatureCellAndBrainChooser.add(colorChooser);
+        creatureCellAndBrainChooser.add(brainTypeChooser);
 
         JPanel buttonPanel = getCreatureViewButtonsPanel(creatureViewerPanel);
 
@@ -203,7 +211,7 @@ public class BaseFrame extends JFrame {
         gbc.gridy = 0;
         creatureViewToolsPanel.add(creatureViewerGrid, gbc);
         gbc.gridy = 1;
-        creatureViewToolsPanel.add(colorChooser, gbc);
+        creatureViewToolsPanel.add(creatureCellAndBrainChooser, gbc);
         gbc.gridy = 2;
         creatureViewToolsPanel.add(buttonPanel, gbc);
         gbc.fill = GridBagConstraints.BOTH;

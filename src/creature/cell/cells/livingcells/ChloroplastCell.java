@@ -10,7 +10,7 @@ import util.CellAttrs;
 import util.Cells;
 
 public class ChloroplastCell extends LivingCell {
-    public static int PRODUCTION_TICKS = 2;
+    public static int PRODUCTION_TICKS = 1;
     private int ticksToProduce;
 
     public ChloroplastCell(Creature owner, int relativeRow, int relativeCol) {

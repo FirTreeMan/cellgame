@@ -45,12 +45,6 @@ public class Grid {
         plantSpawnAttemptsPerTick = 5;
     }
 
-    public static boolean isEmptyAtCell(Cell[][] mat, int row, int col) {
-        return row > 0 && row < mat.length &&
-                col > 0 && col < mat[0].length &&
-                mat[row][col] == null;
-    }
-
     public static int taxicabDistance(Cell start, Cell end) {
         return taxicabDistance(start.getRow(), start.getCol(), end.getRow(), end.getCol());
     }
@@ -85,6 +79,11 @@ public class Grid {
 
     public Color getColorAtCell(int row, int col) {
         return cellMatrix[row][col] == null ? Grid.EMPTY_COLOR : cellMatrix[row][col].getColor();
+    }
+
+    public boolean isEmptyAtCell(int row, int col) {
+        return inBounds(row, col) &&
+                cellMatrix[row][col] == null;
     }
 
     public boolean inBounds(int row, int col) {
@@ -159,6 +158,8 @@ public class Grid {
     private void explode(int startRow, int startCol, int radius) {
         for (int r = -radius; r <= radius; r++)
             for (int c = -(radius - Math.abs(r)); c <= radius - Math.abs(r); c++) {
+                if (!inBounds(startRow + r, startCol + c))
+                    continue;
                 if (cellMatrix[startRow + r][startCol + c] instanceof LivingCell livingCell)
                     removeCreature(livingCell.getOwner());
                 else if (cellMatrix[startRow + r][startCol + c] instanceof FoodCell foodCell)

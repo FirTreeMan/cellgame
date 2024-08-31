@@ -7,7 +7,7 @@ import java.awt.*;
 
 public class PlantCell extends FoodCell {
     public PlantCell() {
-        super(Cells.PLANT, 200, -1, false);
+        super(Cells.PLANT, 300, 100, false);
     }
 
     @Override

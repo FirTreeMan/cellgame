@@ -11,7 +11,7 @@ public class SpinnerCell extends LivingCell {
     private int ticksToProduce;
 
     public SpinnerCell(Creature owner, int relativeRow, int relativeCol) {
-        super(owner, Cells.SPINNER, 10, 5, relativeRow, relativeCol);
+        super(owner, Cells.SPINNER, 6, 5, relativeRow, relativeCol);
         ticksToProduce = 0;
     }
 
@@ -19,21 +19,21 @@ public class SpinnerCell extends LivingCell {
     public void tick(Grid grid) {
         ticksToProduce++;
         if (ticksToProduce >= PRODUCTION_TICKS) {
-            ticksToProduce = 0;
-
             TrapCell trapCell = new TrapCell();
             int row = getRow();
             int col = getCol();
 
             switch (getOwner().getFacing()) {
-                case UP -> col--;
-                case DOWN -> col++;
-                case LEFT -> row--;
-                case RIGHT -> row++;
+                case UP -> col++;
+                case DOWN -> col--;
+                case LEFT -> row++;
+                case RIGHT -> row--;
             }
 
-            getOwner().useEnergy(100);
-            grid.addFood(trapCell, row, col);
+            if (grid.isEmptyAtCell(row, col) && getOwner().useEnergy(100)) {
+                grid.addFood(trapCell, row, col);
+                ticksToProduce = 0;
+            }
         }
     }
 

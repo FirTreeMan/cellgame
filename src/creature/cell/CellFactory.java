@@ -8,7 +8,7 @@ import util.Cells;
 import java.util.Random;
 
 public class CellFactory {
-    public static int CELL_MUTATION_CANDIDATE_COUNT = 8;
+    public static int CELL_MUTATION_CANDIDATE_COUNT = 10;
 
     public static Cell generateTempCell(Cells cellEnum) {
         return switch (cellEnum) {
@@ -22,7 +22,7 @@ public class CellFactory {
             case SHARER -> new SharerCell(null, 0, 0);
             case SPINNER -> new SpinnerCell(null, 0, 0);
             case BOMBER -> new BomberCell(null, 0, 0);
-            case BRAIN -> BrainCell.defaultBrain(null);
+            case BRAIN -> BrainCell.defaultBrain(null, BrainCell.BrainTypes.IMMOBILE);
             case NULL -> null;
 
             case PLANT -> new PlantCell();
@@ -50,6 +50,8 @@ public class CellFactory {
             case EyeCell ignored -> new EyeCell(owner, relativeX, relativeY);
             case ChitinCell ignored -> new ChitinCell(owner, relativeX, relativeY);
             case SharerCell ignored -> new SharerCell(owner, relativeX, relativeY);
+            case SpinnerCell ignored -> new SpinnerCell(owner, relativeX, relativeY);
+            case BomberCell ignored -> new BomberCell(owner, relativeX, relativeY);
             case BrainCell brainCell -> brainCell.copyToChild(owner);
 
             default -> new NullCell(owner, relativeX, relativeY);
@@ -69,6 +71,8 @@ public class CellFactory {
             case 5 -> new EyeCell(owner, relativeX, relativeY);
             case 6 -> new ChitinCell(owner, relativeX, relativeY);
             case 7 -> new SharerCell(owner, relativeX, relativeY);
+            case 8 -> new SpinnerCell(owner, relativeX, relativeY);
+            case 9 -> new BomberCell(owner, relativeX, relativeY);
 
             default -> new NullCell(owner, relativeX, relativeY);
         };

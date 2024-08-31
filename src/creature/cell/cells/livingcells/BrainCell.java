@@ -18,8 +18,8 @@ public class BrainCell extends LivingCell {
             Map.entry(Cells.BODY, 0.0F),
             Map.entry(Cells.MOUTH, 0.0F),
             Map.entry(Cells.LEG, 0.0F),
-            Map.entry(Cells.DAMAGER, -0.1F),
-            Map.entry(Cells.CHLOROPLAST, 0.0F),
+            Map.entry(Cells.DAMAGER, -0.025F),
+            Map.entry(Cells.CHLOROPLAST, 0.025F),
             Map.entry(Cells.EYE, 0.0F),
             Map.entry(Cells.CHITIN, 0.0F),
             Map.entry(Cells.SHARER, 0.0F),
@@ -32,13 +32,10 @@ public class BrainCell extends LivingCell {
             Map.entry(Cells.MEAT, 0.06F),
             Map.entry(Cells.GLUCOSE, 0.05F),
             Map.entry(Cells.EGG, -0.025F),
-            Map.entry(Cells.ROT, 0.0F)
-    );
-    public static Map<EyeDirection, Float> DEFAULT_FACING_WEIGHTS = Map.ofEntries(
-            Map.entry(EyeDirection.UP, 0.0F),
-            Map.entry(EyeDirection.DOWN, 0.0F),
-            Map.entry(EyeDirection.LEFT, 0.0F),
-            Map.entry(EyeDirection.RIGHT, 0.0F)
+            Map.entry(Cells.ROT, 0.0F),
+            Map.entry(Cells.OFFERING, 0.0F),
+            Map.entry(Cells.TRAP, 0.0F),
+            Map.entry(Cells.BOMB, 0.0F)
     );
     public static String[] BRAIN_PARAMS = new String[]{
             "facingUpWeight:",
@@ -117,8 +114,32 @@ public class BrainCell extends LivingCell {
         this.charGenNumber = 6;
     }
 
-    public static BrainCell defaultBrain(Creature owner) {
-        return new BrainCell(owner, 0, 0, DEFAULT_CELL_WEIGHTS, DEFAULT_FACING_WEIGHTS, 5, 70, 0.02F, 0.0F, 0.04F, 0.05F, 0.04F, 0.2F, 400, false);
+    public static BrainCell defaultBrain(Creature owner, BrainTypes brainType) {
+        return switch (brainType) {
+            case IMMOBILE -> new BrainCell(owner, 0, 0, getDefaultCellWeights(brainType), EyeDirection.getFloatHashMap(), 5, 40, 0.02F, 0.0F, 0.04F, 0.05F, 0.04F, 0.2F, 200, false);
+            case HUNTER -> new BrainCell(owner, 0, 0, getDefaultCellWeights(brainType), EyeDirection.getFloatHashMap(), 5, 70, 0.02F, 0.0F, 0.04F, 0.05F, 0.04F, 0.2F, 400, false);
+        };
+    }
+
+    public static Map<Cells, Float> getDefaultCellWeights(BrainTypes brainType) {
+        Map<Cells, Float> cellWeights = new HashMap<>(Cells.values().length);
+        for (Cells cellEnum: Cells.values())
+            cellWeights.put(cellEnum, 0.0F);
+
+        switch (brainType) {
+            case IMMOBILE -> {}
+            case HUNTER -> {
+                cellWeights.put(Cells.DAMAGER, -0.025F);
+                cellWeights.put(Cells.CHLOROPLAST, 0.035F);
+
+                cellWeights.put(Cells.PLANT, 0.05F);
+                cellWeights.put(Cells.MEAT, 0.06F);
+                cellWeights.put(Cells.GLUCOSE, 0.05F);
+                cellWeights.put(Cells.EGG, -0.025F);
+            }
+        }
+
+        return Collections.unmodifiableMap(cellWeights);
     }
 
     public MoveDirection getDecision() {
@@ -276,5 +297,10 @@ public class BrainCell extends LivingCell {
     @Override
     public String getName() {
         return "Brain";
+    }
+
+    public enum BrainTypes {
+        IMMOBILE,
+        HUNTER
     }
 }
